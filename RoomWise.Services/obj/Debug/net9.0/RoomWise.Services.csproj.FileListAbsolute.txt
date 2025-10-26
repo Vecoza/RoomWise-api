@@ -1,0 +1,15 @@
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Services/bin/Debug/net9.0/RoomWise.Services.deps.json
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Services/bin/Debug/net9.0/RoomWise.Services.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Services/bin/Debug/net9.0/RoomWise.Services.pdb
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Services/obj/Debug/net9.0/RoomWise.Services.GeneratedMSBuildEditorConfig.editorconfig
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Services/obj/Debug/net9.0/RoomWise.Services.AssemblyInfoInputs.cache
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Services/obj/Debug/net9.0/RoomWise.Services.AssemblyInfo.cs
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Services/obj/Debug/net9.0/RoomWise.Services.csproj.CoreCompileInputs.cache
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Services/obj/Debug/net9.0/RoomWise.Services.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Services/obj/Debug/net9.0/refint/RoomWise.Services.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Services/obj/Debug/net9.0/RoomWise.Services.pdb
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Services/obj/Debug/net9.0/ref/RoomWise.Services.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Services/bin/Debug/net9.0/RoomWise.Model.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Services/bin/Debug/net9.0/RoomWise.Model.pdb
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Services/obj/Debug/net9.0/RoomWise.Services.csproj.AssemblyReference.cache
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Services/obj/Debug/net9.0/RoomWise.F1143320.Up2Date

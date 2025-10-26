@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {
+      "RoomWise.Services/1.0.0": {
+        "dependencies": {
+          "RoomWise.Model": "1.0.0"
+        },
+        "runtime": {
+          "RoomWise.Services.dll": {}
+        }
+      },
+      "RoomWise.Model/1.0.0": {
+        "runtime": {
+          "RoomWise.Model.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "RoomWise.Services/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "RoomWise.Model/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

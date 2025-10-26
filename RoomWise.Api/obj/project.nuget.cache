@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "gJYGShNxxPQ=",
+  "success": true,
+  "projectFilePath": "/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/RoomWise.Api.csproj",
+  "expectedPackageFiles": [
+    "/Users/vedransunjic/.nuget/packages/microsoft.aspnetcore.openapi/9.0.1/microsoft.aspnetcore.openapi.9.0.1.nupkg.sha512",
+    "/Users/vedransunjic/.nuget/packages/microsoft.openapi/1.6.17/microsoft.openapi.1.6.17.nupkg.sha512",
+    "/Users/vedransunjic/.nuget/packages/scalar.aspnetcore/2.9.0/scalar.aspnetcore.2.9.0.nupkg.sha512"
+  ],
+  "logs": []
+}

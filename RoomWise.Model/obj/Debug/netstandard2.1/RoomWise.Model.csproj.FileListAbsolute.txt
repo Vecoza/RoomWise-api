@@ -1,0 +1,9 @@
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Model/bin/Debug/netstandard2.1/RoomWise.Model.deps.json
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Model/bin/Debug/netstandard2.1/RoomWise.Model.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Model/bin/Debug/netstandard2.1/RoomWise.Model.pdb
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Model/obj/Debug/netstandard2.1/RoomWise.Model.GeneratedMSBuildEditorConfig.editorconfig
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Model/obj/Debug/netstandard2.1/RoomWise.Model.AssemblyInfoInputs.cache
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Model/obj/Debug/netstandard2.1/RoomWise.Model.AssemblyInfo.cs
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Model/obj/Debug/netstandard2.1/RoomWise.Model.csproj.CoreCompileInputs.cache
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Model/obj/Debug/netstandard2.1/RoomWise.Model.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Model/obj/Debug/netstandard2.1/RoomWise.Model.pdb
