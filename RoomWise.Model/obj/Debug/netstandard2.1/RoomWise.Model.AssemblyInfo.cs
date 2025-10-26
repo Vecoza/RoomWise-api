@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RoomWise.Model")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d894d68a8da310be6e0ea934ba8cc7e9d309205a")]
 [assembly: System.Reflection.AssemblyProductAttribute("RoomWise.Model")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RoomWise.Model")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
