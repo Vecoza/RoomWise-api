@@ -7,6 +7,24 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/Dotnet.gitignore
 
+# Local environment variables
+.env
+
+# Docker
+Dockerfile
+docker-compose.yml
+docker-compose.override.yml
+*.dockerfile
+
+# IDE configs (if using JetBrains Rider / IntelliJ)
+.idea/
+
+# User-specific settings
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -52,3 +70,4 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+

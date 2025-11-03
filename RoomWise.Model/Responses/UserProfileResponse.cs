@@ -1,0 +1,13 @@
+namespace RoomWise.Model.Responses;
+
+public class UserProfileResponse
+{
+    public Guid UserId { get; set; }
+    public string FirstName { get; set; } = "";
+    public string LastName { get; set; } = "";
+    public string? Phone { get; set; }
+    public string PreferredLanguage { get; set; } = "en";
+    public int LoyaltyBalance { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
