@@ -6,15 +6,15 @@ using RoomWise.Services.Interface;
 namespace RoomWise.Api.Controller;
 
 
-[ApiController]
-[Route("[controller]")]
-public class BaseController<T,TSearch> : ControllerBase
+/*[ApiController]
+[Route("[controller]")]*/
+public abstract class BaseController<T,TSearch> : ControllerBase
     where T:class
     where TSearch: BaseSearchObject, new()
 {
     protected readonly IService<T, TSearch> _service;
 
-    public BaseController(IService<T, TSearch> service)
+    protected BaseController(IService<T, TSearch> service)
     {
         _service = service;
     }

@@ -12,7 +12,8 @@ public class Review
     public int HotelId { get; set; }
 
     [ForeignKey(nameof(User))]
-    public Guid UserId { get; set; }
+    public string UserId { get; set; } = null!;
+
 
     [Required]
     public short Rating { get; set; } // 1-5

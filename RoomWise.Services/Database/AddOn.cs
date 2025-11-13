@@ -20,7 +20,7 @@ public class AddOn
     public decimal Price { get; set; }
 
     [Column(TypeName = "char(3)"), MaxLength(3)]
-    public string Currency { get; set; } = "USD";
+    public string Currency { get; set; } = "EUR";
 
     public bool IsActive { get; set; } = true;
 

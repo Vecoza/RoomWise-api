@@ -5,7 +5,7 @@ namespace RoomWise.Model.Requests;
 public class PaymentMethodUpsertRequest
 {
     [Required]
-    public Guid UserId { get; set; }
+    public string UserId { get; set; }
 
     [Required, MaxLength(80)]
     public string StripeCustomerId { get; set; } = "";

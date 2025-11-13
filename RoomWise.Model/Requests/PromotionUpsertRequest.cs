@@ -27,4 +27,6 @@ public class PromotionUpsertRequest
     public DateTime EndDate { get; set; }
 
     public bool IsActive { get; set; } = true;
+    
+    
 }

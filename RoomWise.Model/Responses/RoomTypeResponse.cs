@@ -11,7 +11,7 @@ public class RoomTypeResponse
     public bool IsSmokingAllowed { get; set; }
 
     public decimal BasePrice { get; set; }
-    public string Currency { get; set; } = "USD";
+    public string Currency { get; set; } = "EUR";
     public int Stock { get; set; }
 
     public DateTime CreatedAt { get; set; }

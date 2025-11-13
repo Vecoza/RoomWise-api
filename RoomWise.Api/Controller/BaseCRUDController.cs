@@ -6,9 +6,9 @@ using RoomWise.Services.Services;
 namespace RoomWise.Api.Controller;
 
 
-[ApiController]
-[Route("api/[controller]")]
-public class BaseCRUDController<T,TSearch, TInsert, TUpdate> : BaseController<T,TSearch>
+/*[ApiController]
+[Route("api/[controller]")]*/
+public abstract class BaseCRUDController<T,TSearch, TInsert, TUpdate> : BaseController<T,TSearch>
     where T:class
     where TSearch : BaseSearchObject, new()
     where TUpdate:class
@@ -16,11 +16,11 @@ public class BaseCRUDController<T,TSearch, TInsert, TUpdate> : BaseController<T,
 {
     protected readonly ICRUDService<T, TSearch, TInsert, TUpdate> _crudService;
 
-    public BaseCRUDController(ICRUDService<T, TSearch, TInsert, TUpdate> service) :base(service)
+    protected BaseCRUDController(ICRUDService<T, TSearch, TInsert, TUpdate> service) :base(service)
     {
         _crudService = service;
     }
-
+ 
     [HttpPost]
     public virtual Task<T> Create([FromBody] TInsert request)
     {

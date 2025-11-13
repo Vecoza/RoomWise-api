@@ -5,7 +5,7 @@ public class PaymentResponse
     public int Id { get; set; }
     public int ReservationId { get; set; }
     public decimal Amount { get; set; }
-    public string Currency { get; set; } = "USD";
+    public string Currency { get; set; } = "EUR";
     public string Status { get; set; } = "";
     public string Provider { get; set; } = "";
     public string? PaymentIntentId { get; set; }

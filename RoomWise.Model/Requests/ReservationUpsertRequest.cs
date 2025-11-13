@@ -4,8 +4,6 @@ namespace RoomWise.Model.Requests;
 
 public class ReservationUpsertRequest
 {
-    [Required]
-    public Guid UserId { get; set; }
 
     [Required]
     public int HotelId { get; set; }

@@ -10,7 +10,7 @@ public class HotelResponse
     public string Website { get; set; } = string.Empty;
     public int ReviewCount { get; set; }
     public DateTime CreatedAt { get; set; }
-    public DateTime? UpdateAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }
 
 

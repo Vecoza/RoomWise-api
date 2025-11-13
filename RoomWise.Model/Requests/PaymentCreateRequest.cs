@@ -11,7 +11,7 @@ public class PaymentCreateRequest
     public decimal Amount { get; set; }
 
     [Required, StringLength(3)]
-    public string Currency { get; set; } = "USD";
+    public string Currency { get; set; } = "EUR";
 
     [MaxLength(30)]
     public string Provider { get; set; } = "Stripe";

@@ -4,23 +4,47 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using RoomWise.Api.Data;
 using RoomWise.Api.Extensions;
+using RoomWise.Api.Mapping;
 using RoomWise.Model;
 using RoomWise.Model.Responses;
 using RoomWise.Services.Interface;
 using RoomWise.Services.Services;
 using Scalar.AspNetCore;
+using AutoMapper;
+using Stripe;
+using ReviewService = RoomWise.Services.Services.ReviewService;
 
 var builder = WebApplication.CreateBuilder(args);
 
 DotEnv.Load();
 
+
 builder.Configuration.AddEnvironmentVariables();
 
+StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+
 builder.Services.AddOpenApi();
+
+/*builder.Services.AddAutoMapper(typeof(RoomWiseProfile));*/
+// AutoMapper
+builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(RoomWiseProfile).Assembly);
+
 
 builder.Services.AddTransient<IHotelService, HotelService>();
 builder.Services.AddTransient<IRoomTypeService, RoomTypeService>();
 builder.Services.AddTransient<IRoomRateService, RoomRateService>();
+builder.Services.AddTransient<IReservationService, ReservationService>();
+builder.Services.AddTransient<IWishlistService, WishlistService>();
+builder.Services.AddTransient<ISearchService, SearchService>();
+builder.Services.AddTransient<IRoomAvailabilityService, RoomAvailabilityService>();
+builder.Services.AddTransient<IReviewService,ReviewService>();
+builder.Services.AddTransient<IPromotionService, PromotionService>();
+builder.Services.AddTransient<IUserProfileService, UserProfileService>();
+builder.Services.AddTransient<ILoyaltyService, LoyaltyService>();
+builder.Services.AddTransient<ITagService, TagService>();
+builder.Services.AddTransient<IHotelImageService, HotelImageService>();
+builder.Services.AddTransient<IPhoneContactService, PhoneContactService>();
+
 
 
 
@@ -51,6 +75,11 @@ builder.Services.AddOpenApi(options =>
         return Task.CompletedTask;
     });
 });
+
+
+
+
+
 
 
 var app = builder.Build();

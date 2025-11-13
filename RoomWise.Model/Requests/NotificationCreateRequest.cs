@@ -5,7 +5,7 @@ namespace RoomWise.Model.Requests;
 public class NotificationCreateRequest
 {
     [Required]
-    public Guid UserId { get; set; }
+    public string UserId { get; set; }
 
     public int? ReservationId { get; set; }
 

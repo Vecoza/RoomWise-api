@@ -15,7 +15,7 @@ public class Payment
     public decimal Amount { get; set; }
 
     [Column(TypeName = "char(3)"), MaxLength(3)]
-    public string Currency { get; set; } = "USD";
+    public string Currency { get; set; } = "EUR";
     
     [Required, MaxLength(20)]
     public string Status { get; set; } = "RequiresAction"; // RequiresAction, Succeeded, Failed, Refunded

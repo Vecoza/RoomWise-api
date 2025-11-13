@@ -5,8 +5,12 @@ namespace RoomWise.Model;
 
 public class Wishlist
 {
+    [Key]                              
+    public int Id { get; set; }
+    
     [ForeignKey(nameof(User))]
-    public Guid UserId { get; set; }
+    public string UserId { get; set; } = null!;
+
 
     [ForeignKey(nameof(Hotel))]
     public int HotelId { get; set; }

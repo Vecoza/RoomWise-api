@@ -39,5 +39,278 @@ public class DataContext : IdentityDbContext<AppUser>
     public DbSet<Tag> Tags { get; set; }
     public DbSet<UserProfile> UserProfiles { get; set; }
     public DbSet<Wishlist> Wishlists { get; set; }
+    public DbSet<LoyaltyPoint> LoyaltyPoints { get; set; }
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+    base.OnModelCreating(builder);
+
+    // ---------------------------
+    // Identity ↔ UserProfile (1:1)
+    // ---------------------------
+    builder.Entity<AppUser>()
+        .HasOne(a => a.Profile)
+        .WithOne(p => p.User)
+        .HasForeignKey<UserProfile>(p => p.UserId);
+
+    builder.Entity<UserProfile>(e =>
+    {
+        e.Property(p => p.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        e.Property(p => p.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+    });
+
+    // ---------------------------
+    // LoyaltyPoint
+    // ---------------------------
+    builder.Entity<LoyaltyPoint>(e =>
+    {
+        e.ToTable("LoyaltyPoints");
+        e.HasIndex(x => x.UserId);
+    });
+
+    // ---------------------------
+    // Country / City
+    // ---------------------------
+    builder.Entity<City>()
+        .HasOne(c => c.Country)
+        .WithMany(cn => cn.Cities)
+        .HasForeignKey(c => c.CountryId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+    // ---------------------------
+    // Hotel and related
+    // ---------------------------
+    builder.Entity<Hotel>()
+        .HasOne(h => h.City)
+        .WithMany(c => c.Hotels)
+        .HasForeignKey(h => h.CityId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+    builder.Entity<HotelImage>()
+        .HasOne(hi => hi.Hotel)
+        .WithMany(h => h.Images)
+        .HasForeignKey(hi => hi.HotelId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+    builder.Entity<HotelImage>()
+        .HasIndex(x => new { x.HotelId, x.SortOrder });
+
+    builder.Entity<PhoneContact>()
+        .HasOne(pc => pc.Hotel)
+        .WithMany(h => h.PhoneContacts)
+        .HasForeignKey(pc => pc.HotelId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+    // Facilities (HotelFacility, RoomTypeFacility)
+    builder.Entity<HotelFacility>()
+        .HasKey(hf => new { hf.HotelId, hf.FacilityId });
+
+    builder.Entity<HotelFacility>()
+        .HasOne(hf => hf.Hotel)
+        .WithMany(h => h.HotelFacilities)
+        .HasForeignKey(hf => hf.HotelId);
+
+    builder.Entity<HotelFacility>()
+        .HasOne(hf => hf.Facility)
+        .WithMany(f => f.HotelFacilities)
+        .HasForeignKey(hf => hf.FacilityId);
+
+    builder.Entity<RoomTypeFacility>()
+        .HasKey(rf => new { rf.RoomTypeId, rf.FacilityId });
+
+    builder.Entity<RoomTypeFacility>()
+        .HasOne(rf => rf.RoomType)
+        .WithMany(rt => rt.RoomTypeFacilities)
+        .HasForeignKey(rf => rf.RoomTypeId);
+
+    builder.Entity<RoomTypeFacility>()
+        .HasOne(rf => rf.Facility)
+        .WithMany(f => f.RoomTypeFacilities)
+        .HasForeignKey(rf => rf.FacilityId);
+
+    // Tags (HotelTag) + unique tag name
+    builder.Entity<HotelTag>()
+        .HasKey(ht => new { ht.HotelId, ht.TagId });
+
+    builder.Entity<HotelTag>()
+        .HasOne(ht => ht.Hotel)
+        .WithMany(h => h.HotelTags)
+        .HasForeignKey(ht => ht.HotelId);
+
+    builder.Entity<HotelTag>()
+        .HasOne(ht => ht.Tag)
+        .WithMany(t => t.HotelTags)
+        .HasForeignKey(ht => ht.TagId);
+
+    builder.Entity<Tag>()
+        .HasIndex(t => t.Name)
+        .IsUnique();
+
+    // Wishlist (Id PK + unique pair)
+    builder.Entity<Wishlist>()
+        .HasIndex(w => new { w.UserId, w.HotelId })
+        .IsUnique();
+
+    builder.Entity<Wishlist>()
+        .Property(w => w.CreatedAt)
+        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+    builder.Entity<Wishlist>()
+        .HasOne(w => w.User)
+        .WithMany()
+        .HasForeignKey(w => w.UserId);
+
+    builder.Entity<Wishlist>()
+        .HasOne(w => w.Hotel)
+        .WithMany()
+        .HasForeignKey(w => w.HotelId);
+
+    // ---------------------------
+    // RoomType and related
+    // ---------------------------
+    builder.Entity<RoomType>()
+        .HasOne(rt => rt.Hotel)
+        .WithMany(h => h.RoomTypes)
+        .HasForeignKey(rt => rt.HotelId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+    builder.Entity<RoomTypeImage>()
+        .HasOne(rti => rti.RoomType)
+        .WithMany(rt => rt.Images)
+        .HasForeignKey(rti => rti.RoomTypeId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+    builder.Entity<RoomRate>()
+        .HasOne(rr => rr.RoomType)
+        .WithMany(rt => rt.Rates)
+        .HasForeignKey(rr => rr.RoomTypeId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+    builder.Entity<RoomAvailability>()
+        .HasOne(ra => ra.RoomType)
+        .WithMany(rt => rt.Availabilities)
+        .HasForeignKey(ra => ra.RoomTypeId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+    builder.Entity<RoomAvailability>()
+        .HasIndex(a => new { a.RoomTypeId, a.Date })
+        .IsUnique();
+
+    // ---------------------------
+    // Reservation + AddOns
+    // ---------------------------
+    builder.Entity<Reservation>()
+        .HasIndex(r => r.PublicId)
+        .IsUnique();
+
+    builder.Entity<Reservation>()
+        .HasIndex(r => r.ConfirmationNumber)
+        .IsUnique();
+
+    builder.Entity<Reservation>()
+        .HasOne(r => r.User)
+        .WithMany()
+        .HasForeignKey(r => r.UserId);
+
+    // Use Restrict to preserve reservation history if Hotel/RoomType is removed
+    builder.Entity<Reservation>()
+        .HasOne(r => r.Hotel)
+        .WithMany()
+        .HasForeignKey(r => r.HotelId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+    builder.Entity<Reservation>()
+        .HasOne(r => r.RoomType)
+        .WithMany()
+        .HasForeignKey(r => r.RoomTypeId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+    // Optional promotion on reservation
+    builder.Entity<Reservation>()
+        .HasOne(r => r.Promotion)
+        .WithMany()
+        .HasForeignKey(r => r.PromotionId)
+        .OnDelete(DeleteBehavior.SetNull);
+
+    // ReservationAddOn (composite key)
+    builder.Entity<ReservationAddOn>()
+        .HasKey(ra => new { ra.ReservationId, ra.AddOnId });
+
+    builder.Entity<ReservationAddOn>()
+        .HasOne(ra => ra.Reservation)
+        .WithMany(r => r.AddOns)
+        .HasForeignKey(ra => ra.ReservationId);
+
+    builder.Entity<ReservationAddOn>()
+        .HasOne(ra => ra.AddOn)
+        .WithMany(a => a.ReservationAddOns)
+        .HasForeignKey(ra => ra.AddOnId);
+
+    // AddOn → Hotel
+    builder.Entity<AddOn>()
+        .HasOne(a => a.Hotel)
+        .WithMany(h => h.AddOns)
+        .HasForeignKey(a => a.HotelId);
+
+    // ---------------------------
+    // Payments
+    // ---------------------------
+    builder.Entity<Payment>()
+        .HasOne(p => p.Reservation)
+        .WithMany(r => r.Payments)
+        .HasForeignKey(p => p.ReservationId);
+
+    builder.Entity<PaymentMethod>()
+        .HasOne(pm => pm.User)
+        .WithMany()
+        .HasForeignKey(pm => pm.UserId);
+
+    // ---------------------------
+    // Reviews
+    // ---------------------------
+    builder.Entity<Review>()
+        .HasOne(r => r.Hotel)
+        .WithMany(h => h.Reviews)
+        .HasForeignKey(r => r.HotelId);
+
+    builder.Entity<Review>()
+        .HasOne(r => r.User)
+        .WithMany()
+        .HasForeignKey(r => r.UserId);
+
+    // One review per user per hotel (policy)
+    builder.Entity<Review>()
+        .HasIndex(r => new { r.HotelId, r.UserId })
+        .IsUnique();
+
+    // For listing newest first per hotel
+    builder.Entity<Review>()
+        .HasIndex(r => new { r.HotelId, r.CreatedAt });
+
+    // ---------------------------
+    // Notifications
+    // ---------------------------
+    builder.Entity<Notification>()
+        .HasOne(n => n.User)
+        .WithMany()
+        .HasForeignKey(n => n.UserId);
+
+    builder.Entity<Notification>()
+        .HasOne(n => n.Reservation)
+        .WithMany()
+        .HasForeignKey(n => n.ReservationId);
+
+    // ---------------------------
+    // Promotions
+    // ---------------------------
+    builder.Entity<Promotion>()
+        .HasOne(p => p.Hotel)
+        .WithMany()
+        .HasForeignKey(p => p.HotelId)
+        .OnDelete(DeleteBehavior.SetNull);
+    }
+
+   
+
+   
 
 }

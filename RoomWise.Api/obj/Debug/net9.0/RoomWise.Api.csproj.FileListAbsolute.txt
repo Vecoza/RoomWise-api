@@ -141,3 +141,10 @@
 /Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/obj/Debug/net9.0/RoomWise.Api.pdb
 /Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/obj/Debug/net9.0/RoomWise.Api.genruntimeconfig.cache
 /Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/obj/Debug/net9.0/ref/RoomWise.Api.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/bin/Debug/net9.0/AutoMapper.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/bin/Debug/net9.0/AutoMapper.Extensions.Microsoft.DependencyInjection.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/bin/Debug/net9.0/Newtonsoft.Json.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/bin/Debug/net9.0/Stripe.net.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/bin/Debug/net9.0/System.Configuration.ConfigurationManager.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/bin/Debug/net9.0/System.Security.Cryptography.ProtectedData.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/bin/Debug/net9.0/runtimes/win/lib/net9.0/System.Diagnostics.EventLog.Messages.dll

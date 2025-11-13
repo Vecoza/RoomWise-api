@@ -9,7 +9,8 @@ public class PaymentMethod
     public int Id { get; set; }
 
     [ForeignKey(nameof(User))]
-    public Guid UserId { get; set; }
+    public string UserId { get; set; } = null!;
+
 
     [Required, MaxLength(80)]
     public string StripeCustomerId { get; set; } = null!;

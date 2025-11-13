@@ -11,9 +11,9 @@ public class Hotel
   
     public string AddressLine { get; set; } = string.Empty;
 
-    public string Email { get; set; } = string.Empty;
+    public string? Email { get; set; } = string.Empty;
 
-    public string Website { get; set; } = string.Empty;
+    public string? Website { get; set; } = string.Empty;
 
   
     public int CityId { get; set; }
@@ -24,7 +24,7 @@ public class Hotel
 
     public DateTime CreatedAt { get; set; }
 
-    public DateTime? UpdateAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
     
     
     public virtual City City { get; set; } = null!;
@@ -34,4 +34,7 @@ public class Hotel
     public virtual ICollection<HotelFacility> HotelFacilities { get; set; } = new List<HotelFacility>();
     public virtual ICollection<HotelTag> HotelTags { get; set; } = new List<HotelTag>();
     public virtual ICollection<Review> Reviews { get; set; } = new List<Review>();
+    
+    public virtual ICollection<AddOn> AddOns { get; set; } = new List<AddOn>();
+
 }

@@ -16,7 +16,7 @@ public class AddOnUpsertRequest
     public decimal Price { get; set; }
 
     [Required, StringLength(3)]
-    public string Currency { get; set; } = "USD";
+    public string Currency { get; set; } = "EUR";
 
     public bool IsActive { get; set; } = true;
 }

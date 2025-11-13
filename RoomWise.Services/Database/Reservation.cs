@@ -8,8 +8,11 @@ public class Reservation
     [Key]
     public int Id { get; set; }
 
+	public Guid PublicId { get; set; }
+
     [ForeignKey(nameof(User))]
-    public Guid UserId { get; set; }
+    public string UserId { get; set; } = null!;
+
 
     [ForeignKey(nameof(Hotel))]
     public int HotelId { get; set; }
@@ -59,4 +62,5 @@ public class Reservation
     public virtual ICollection<ReservationAddOn> AddOns { get; set; } = new List<ReservationAddOn>();
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 
+    
 }

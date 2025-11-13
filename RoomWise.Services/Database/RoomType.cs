@@ -1,4 +1,7 @@
 // RoomWise.Model/RoomType.cs
+
+using System.ComponentModel.DataAnnotations;
+
 namespace RoomWise.Model;
 
 public class RoomType
@@ -23,7 +26,8 @@ public class RoomType
     public decimal BasePrice { get; set; }
 
     // 3-letter ISO code, default "USD"
-    public string Currency { get; set; } = "USD";
+    [MaxLength(3)]
+    public string Currency { get; set; } = "EUR";
 
     // number of physical rooms of this type
     public int Stock { get; set; } = 0;

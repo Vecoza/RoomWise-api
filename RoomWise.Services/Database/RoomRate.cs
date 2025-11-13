@@ -8,6 +8,7 @@ public class RoomRate
     public int Id { get; set; } 
 
     // FK → RoomType.Id 
+    [ForeignKey(nameof(RoomType))]
     public int RoomTypeId { get; set; } 
     
     [Column(TypeName = "date")]

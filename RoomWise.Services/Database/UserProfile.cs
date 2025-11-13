@@ -6,7 +6,8 @@ namespace RoomWise.Model;
 public class UserProfile
 {
     [Key]
-    public Guid UserId { get; set; }                // FK -> AspNetUsers.Id
+    [ForeignKey(nameof(User))]
+    public string UserId { get; set; }                // FK -> AspNetUsers.Id
 
     [Required, MaxLength(80)]
     public string FirstName { get; set; } = null!;
@@ -26,6 +27,6 @@ public class UserProfile
 
     public DateTime UpdatedAt { get; set; }
 
-    // Navigation to Identity user (assumes AppUser exists)
+    // Navigation to Identity user
     public virtual AppUser? User { get; set; }
 }

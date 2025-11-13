@@ -27,33 +27,39 @@ public sealed class RoomRateService
         return q.OrderBy(x => x.StartDate);
     }
 
-    // Override BeforeInsert/BeforeUpdate to validate date ranges and overlap server-side
-    protected override async Task BeforeInsert(RoomRate entity, RoomRateRequest request)
+    protected override Task BeforeInsert(RoomRate entity, RoomRateRequest req)
     {
-        // Check EndDate >= StartDate
-        if (request.EndDate < request.StartDate)
+        if (req.EndDate < req.StartDate)
             throw new ArgumentException("EndDate must be >= StartDate");
 
-        // Check overlap for same RoomType
-        var exists = await _context.Set<RoomRate>()
-            .AnyAsync(r =>
-                r.RoomTypeId == request.RoomTypeId &&
-                !(r.EndDate < request.StartDate || r.StartDate > request.EndDate));
-        if (exists)
-            throw new InvalidOperationException("Overlapping rate exists for this room type.");
+        if (req.Price < 0)
+            throw new ArgumentException("Price cannot be negative.");
+
+        entity.Currency = string.IsNullOrWhiteSpace(req.Currency)
+            ? "EUR"
+            : req.Currency!.Trim().ToUpperInvariant();
+
+        if (entity.Currency.Length != 3)
+            throw new ArgumentException("Currency must be a 3-letter code.");
+
+        return base.BeforeInsert(entity, req);
     }
 
-    protected override async Task BeforeUpdate(RoomRate entity, RoomRateRequest request)
+    protected override async Task BeforeUpdate(RoomRate entity, RoomRateRequest req)
     {
-        if (request.EndDate < request.StartDate)
+        if (req.EndDate < req.StartDate)
             throw new ArgumentException("EndDate must be >= StartDate");
 
-        var exists = await _context.Set<RoomRate>()
-            .AnyAsync(r =>
-                r.Id != entity.Id &&
-                r.RoomTypeId == request.RoomTypeId &&
-                !(r.EndDate < request.StartDate || r.StartDate > request.EndDate));
-        if (exists)
-            throw new InvalidOperationException("Overlapping rate exists for this room type.");
+        if (req.Price < 0)
+            throw new ArgumentException("Price cannot be negative.");
+
+        if (!string.IsNullOrWhiteSpace(req.Currency))
+        {
+            var c = req.Currency.Trim().ToUpperInvariant();
+            if (c.Length != 3) throw new ArgumentException("Currency must be a 3-letter code.");
+            entity.Currency = c;
+        }
+
+        await base.BeforeUpdate(entity, req);
     }
 }
