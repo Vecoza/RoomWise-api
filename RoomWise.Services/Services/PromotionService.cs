@@ -15,12 +15,10 @@ public class PromotionService
         IPromotionService
 {
     private readonly DbContext _db;
-    private readonly IMapper _mapper;
 
     public PromotionService(DbContext db, IMapper mapper) : base(db, mapper)
     {
         _db = db;
-        _mapper = mapper;
     }
 
     protected override IQueryable<Promotion> ApplyFilter(IQueryable<Promotion> q, PromotionSearchObject s)

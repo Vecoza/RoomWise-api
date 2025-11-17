@@ -26,25 +26,21 @@ public sealed class ReservationsController
     [HttpGet("/api/reservations/my")]
     public async Task<ActionResult<PagedResult<ReservationResponse>>> My([FromQuery] string? status)
     {
-        var userIdRaw = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
-        if (string.IsNullOrEmpty(userIdRaw) || !Guid.TryParse(userIdRaw, out var userId))
-        {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+        if (string.IsNullOrWhiteSpace(userId))
             return Forbid();
-        }
+
         var result = await _reservations.GetMyAsync(userId, status);
         return Ok(result);
     }
 
+
     [HttpPost("{id:guid}/cancel")]
-    /*[Authorize]*/
     public async Task<IActionResult> Cancel(Guid id)
     {
-        var userIdRaw = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
-        if (string.IsNullOrEmpty(userIdRaw) || !Guid.TryParse(userIdRaw, out var userId))
-        {
-
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+        if (string.IsNullOrWhiteSpace(userId))
             return Forbid();
-        }
 
         var result = await _reservations.CancelAsync(id, userId);
         if (!result) return NotFound();
@@ -95,6 +91,6 @@ public sealed class ReservationsController
     }
 
 
-    [HttpPost("/api/reservations/{id:guid}/cancel")]
-    public Task<IActionResult> CancelAlias(Guid id) => Cancel(id);
+    /*[HttpPost("/api/reservations/{id:guid}/cancel")]
+    public Task<IActionResult> CancelAlias(Guid id) => Cancel(id);*/
 }

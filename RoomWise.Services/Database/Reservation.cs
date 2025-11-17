@@ -50,6 +50,10 @@ public class Reservation
     public string Currency { get; set; } = "USD";
 
     public int? PromotionId { get; set; }
+    
+    public bool CheckInReminderSent { get; set; } = false;
+    public bool CheckOutReminderSent { get; set; } = false;
+
 
     public DateTime CreatedAt { get; set; }
 

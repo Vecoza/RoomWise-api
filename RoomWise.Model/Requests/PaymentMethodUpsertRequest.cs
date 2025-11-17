@@ -5,10 +5,10 @@ namespace RoomWise.Model.Requests;
 public class PaymentMethodUpsertRequest
 {
     [Required]
-    public string UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
 
     [Required, MaxLength(80)]
-    public string StripeCustomerId { get; set; } = "";
+    public string StripePaymentMethodId { get; set; } = string.Empty;
 
     [MaxLength(20)]
     public string? Brand { get; set; }

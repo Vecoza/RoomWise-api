@@ -11,20 +11,25 @@ public class AddOn
     [ForeignKey(nameof(Hotel))]
     public int HotelId { get; set; }
 
-    [Required, MaxLength(100)]
-    public string Name { get; set; } = null!;
+    [Required, MaxLength(80)]
+    public string Name { get; set; } = string.Empty;
 
+    [MaxLength(400)]
     public string? Description { get; set; }
 
+   
+    [Required, MaxLength(20)]
+    public string PricingModel { get; set; } = "PerNight";
+
+   
     [Column(TypeName = "numeric(10,2)")]
     public decimal Price { get; set; }
 
-    [Column(TypeName = "char(3)"), MaxLength(3)]
+    [Required, MaxLength(3)]
     public string Currency { get; set; } = "EUR";
 
     public bool IsActive { get; set; } = true;
 
-    public virtual Hotel Hotel { get; set; } = null!;
+    public virtual Hotel? Hotel { get; set; }
     public virtual ICollection<ReservationAddOn> ReservationAddOns { get; set; } = new List<ReservationAddOn>();
-
 }

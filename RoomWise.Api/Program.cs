@@ -11,7 +11,9 @@ using RoomWise.Services.Interface;
 using RoomWise.Services.Services;
 using Scalar.AspNetCore;
 using AutoMapper;
+using RoomWise.Api.Background;
 using Stripe;
+using PaymentMethodService = RoomWise.Services.Services.PaymentMethodService;
 using ReviewService = RoomWise.Services.Services.ReviewService;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,7 +25,11 @@ builder.Configuration.AddEnvironmentVariables();
 
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
-builder.Services.AddOpenApi();
+// Bind StripeOptions for DI (IOptions<StripeOptions>)
+builder.Services.Configure<RoomWise.Api.Options.StripeOptions>(
+    builder.Configuration.GetSection("Stripe"));
+
+/*builder.Services.AddOpenApi();*/
 
 /*builder.Services.AddAutoMapper(typeof(RoomWiseProfile));*/
 // AutoMapper
@@ -44,9 +50,14 @@ builder.Services.AddTransient<ILoyaltyService, LoyaltyService>();
 builder.Services.AddTransient<ITagService, TagService>();
 builder.Services.AddTransient<IHotelImageService, HotelImageService>();
 builder.Services.AddTransient<IPhoneContactService, PhoneContactService>();
+builder.Services.AddTransient<INotificationService, NotificationService>();
+builder.Services.AddTransient<IPaymentService, PaymentService>();    
+builder.Services.AddTransient<IPaymentMethodService, PaymentMethodService>();
+builder.Services.AddTransient<IAddOnService, AddOnService>();
+builder.Services.AddTransient<IReportService, ReportService>();
 
 
-
+builder.Services.AddHostedService<ReservationReminderService>();
 
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));

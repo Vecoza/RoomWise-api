@@ -28,6 +28,7 @@ public sealed class ReviewsController
 
         var created = await _reviews.CreateAsync(req, ct);
         return CreatedAtAction(nameof(HotelReviews), new { id = created.HotelId }, created);
+        
     }
 
     [HttpGet("/api/hotels/{id:int}/reviews")]

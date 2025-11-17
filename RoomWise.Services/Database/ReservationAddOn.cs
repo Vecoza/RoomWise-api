@@ -5,17 +5,23 @@ namespace RoomWise.Model;
 
 public class ReservationAddOn
 {
+    [Key]
+    public int Id { get; set; }
+
     [ForeignKey(nameof(Reservation))]
     public int ReservationId { get; set; }
 
     [ForeignKey(nameof(AddOn))]
     public int AddOnId { get; set; }
 
-    public int Quantity { get; set; } = 1;
+    public int Quantity { get; set; }
 
     [Column(TypeName = "numeric(10,2)")]
     public decimal UnitPrice { get; set; }
 
-    public virtual Reservation Reservation { get; set; } = null!;
-    public virtual AddOn AddOn { get; set; } = null!;
+    [Column(TypeName = "numeric(10,2)")]
+    public decimal LineTotal { get; set; }
+
+    public virtual Reservation? Reservation { get; set; }
+    public virtual AddOn? AddOn { get; set; }
 }

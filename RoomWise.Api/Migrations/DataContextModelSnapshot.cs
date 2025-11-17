@@ -165,10 +165,11 @@ namespace RoomWise.Api.Migrations
                     b.Property<string>("Currency")
                         .IsRequired()
                         .HasMaxLength(3)
-                        .HasColumnType("char(3)");
+                        .HasColumnType("character varying(3)");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
 
                     b.Property<int>("HotelId")
                         .HasColumnType("integer");
@@ -178,11 +179,16 @@ namespace RoomWise.Api.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric(10,2)");
+
+                    b.Property<string>("PricingModel")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
 
@@ -619,6 +625,10 @@ namespace RoomWise.Api.Migrations
                         .HasColumnType("char(4)");
 
                     b.Property<string>("StripeCustomerId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("StripePaymentMethodId")
                         .IsRequired()
                         .HasMaxLength(80)
                         .HasColumnType("character varying(80)");
@@ -719,8 +729,14 @@ namespace RoomWise.Api.Migrations
                     b.Property<DateTime>("CheckIn")
                         .HasColumnType("date");
 
+                    b.Property<bool>("CheckInReminderSent")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime>("CheckOut")
                         .HasColumnType("date");
+
+                    b.Property<bool>("CheckOutReminderSent")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("ConfirmationNumber")
                         .IsRequired()
@@ -797,21 +813,32 @@ namespace RoomWise.Api.Migrations
 
             modelBuilder.Entity("RoomWise.Model.ReservationAddOn", b =>
                 {
-                    b.Property<int>("ReservationId")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("AddOnId")
                         .HasColumnType("integer");
 
+                    b.Property<decimal>("LineTotal")
+                        .HasColumnType("numeric(10,2)");
+
                     b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ReservationId")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("numeric(10,2)");
 
-                    b.HasKey("ReservationId", "AddOnId");
+                    b.HasKey("Id");
 
                     b.HasIndex("AddOnId");
+
+                    b.HasIndex("ReservationId");
 
                     b.ToTable("ReservationAddOns");
                 });
@@ -1340,7 +1367,7 @@ namespace RoomWise.Api.Migrations
                     b.HasOne("RoomWise.Model.AddOn", "AddOn")
                         .WithMany("ReservationAddOns")
                         .HasForeignKey("AddOnId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("RoomWise.Model.Reservation", "Reservation")

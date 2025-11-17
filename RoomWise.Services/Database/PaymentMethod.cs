@@ -13,7 +13,10 @@ public class PaymentMethod
 
 
     [Required, MaxLength(80)]
-    public string StripeCustomerId { get; set; } = null!;
+    public string StripePaymentMethodId { get; set; } = null!;
+    
+    [MaxLength(64)]
+    public string? StripeCustomerId { get; set; }
 
     [MaxLength(20)]
     public string? Brand { get; set; }

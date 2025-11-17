@@ -10,15 +10,13 @@ using RoomWise.Services.Interface;
 namespace RoomWise.Services.Services;
 
 public class ReviewService
-  : BaseCRUDService<ReviewResponse, ReviewSearchObject, Review, ReviewUpsertRequest, ReviewUpsertRequest>, IReviewService
+    : BaseCRUDService<ReviewResponse, ReviewSearchObject, Review, ReviewUpsertRequest, ReviewUpsertRequest>, IReviewService
 {
     private readonly DbContext _ctx;
-    private readonly IMapper _mapper;
 
     public ReviewService(DbContext ctx, IMapper mapper) : base(ctx, mapper)
     {
         _ctx = ctx;
-        _mapper = mapper;
     }
 
     protected override IQueryable<Review> ApplyFilter(IQueryable<Review> q, ReviewSearchObject s)

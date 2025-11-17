@@ -21,4 +21,12 @@ public class ReservationUpsertRequest
     public int Guests { get; set; } = 1;
 
     public int? PromotionId { get; set; }
+    
+    public List<ReservationAddOnItem> AddOns { get; set; } = new();
+}
+
+public class ReservationAddOnItem
+{
+    public int AddOnId { get; set; }
+    public int Quantity { get; set; }
 }

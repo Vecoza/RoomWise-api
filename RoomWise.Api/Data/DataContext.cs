@@ -232,8 +232,18 @@ public class DataContext : IdentityDbContext<AppUser>
         .OnDelete(DeleteBehavior.SetNull);
 
     // ReservationAddOn (composite key)
-    builder.Entity<ReservationAddOn>()
-        .HasKey(ra => new { ra.ReservationId, ra.AddOnId });
+    builder.Entity<ReservationAddOn>(e =>
+    {
+        e.HasOne(ra => ra.Reservation)
+            .WithMany(r => r.AddOns)
+            .HasForeignKey(ra => ra.ReservationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        e.HasOne(ra => ra.AddOn)
+            .WithMany(a => a.ReservationAddOns)
+            .HasForeignKey(ra => ra.AddOnId)
+            .OnDelete(DeleteBehavior.Restrict);
+    });
 
     builder.Entity<ReservationAddOn>()
         .HasOne(ra => ra.Reservation)
@@ -246,11 +256,16 @@ public class DataContext : IdentityDbContext<AppUser>
         .HasForeignKey(ra => ra.AddOnId);
 
     // AddOn → Hotel
-    builder.Entity<AddOn>()
-        .HasOne(a => a.Hotel)
-        .WithMany(h => h.AddOns)
-        .HasForeignKey(a => a.HotelId);
+    builder.Entity<AddOn>(e =>
+    {
+        e.HasOne(a => a.Hotel)
+            .WithMany(h => h.AddOns)
+            .HasForeignKey(a => a.HotelId)
+            .OnDelete(DeleteBehavior.Cascade);
 
+        e.Property(a => a.Currency)
+            .HasMaxLength(3);
+    });
     // ---------------------------
     // Payments
     // ---------------------------
@@ -259,10 +274,13 @@ public class DataContext : IdentityDbContext<AppUser>
         .WithMany(r => r.Payments)
         .HasForeignKey(p => p.ReservationId);
 
-    builder.Entity<PaymentMethod>()
-        .HasOne(pm => pm.User)
-        .WithMany()
-        .HasForeignKey(pm => pm.UserId);
+    builder.Entity<PaymentMethod>(e =>
+    {
+        e.HasOne(pm => pm.User)
+            .WithMany() 
+            .HasForeignKey(pm => pm.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+    });
 
     // ---------------------------
     // Reviews

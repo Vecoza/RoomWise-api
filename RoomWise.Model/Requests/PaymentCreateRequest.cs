@@ -15,4 +15,7 @@ public class PaymentCreateRequest
 
     [MaxLength(30)]
     public string Provider { get; set; } = "Stripe";
+    
+    public string? PaymentMethodId { get; set; }
+
 }

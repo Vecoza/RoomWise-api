@@ -4,7 +4,7 @@ public class ReservationResponse
 {
     public Guid PublicId { get; set; }
     public int Id { get; set; }
-    public string UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
     public int HotelId { get; set; }
     public int RoomTypeId { get; set; }
     public string ConfirmationNumber { get; set; } = "";
@@ -20,4 +20,11 @@ public class ReservationResponse
     public int? PromotionId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? CancelledAt { get; set; }
+    
+    public string HotelName { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string ThumbnailUrl { get; set; } = string.Empty;
+
+  
+    public List<ReservationAddOnResponse> AddOns { get; set; } = new();
 }

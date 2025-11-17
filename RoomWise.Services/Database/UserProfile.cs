@@ -5,9 +5,7 @@ namespace RoomWise.Model;
 
 public class UserProfile
 {
-    [Key]
-    [ForeignKey(nameof(User))]
-    public string UserId { get; set; }                // FK -> AspNetUsers.Id
+    [Key] [ForeignKey(nameof(User))] public string UserId { get; set; } = string.Empty;                // FK -> AspNetUsers.Id
 
     [Required, MaxLength(80)]
     public string FirstName { get; set; } = null!;

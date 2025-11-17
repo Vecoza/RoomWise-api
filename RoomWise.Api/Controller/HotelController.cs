@@ -6,28 +6,36 @@ using RoomWise.Services.Interface;
 
 namespace RoomWise.Api.Controller;
 
-
 [ApiController]
-[Route("api/[controller]")]
-public class HotelController : BaseCRUDController<HotelResponse, HotelSearchObject, HotelUpsertRequest, HotelUpsertRequest>
+[Route("api/hotels")]
+public class HotelsController 
+	: BaseCRUDController<HotelResponse, HotelSearchObject, HotelUpsertRequest, HotelUpsertRequest>
 {
-	public HotelController(IHotelService svc) : base(svc) { }
+	private readonly IHotelService _hotelService;
 
-	[HttpGet("/api/hotels")]
-	public async Task<PagedResult<HotelSearchItemResponse>> Search([FromQuery] HotelSearchObject search)
+	public HotelsController(IHotelService hotelService)
+		: base(hotelService)
 	{
-		if (_service is IHotelService hotelService)
-		{
-			return await hotelService.SearchAsync(search);
-		}
-		// Fallback should never happen; keep signature stable
-		return new PagedResult<HotelSearchItemResponse> { Items = new List<HotelSearchItemResponse>(), TotalCount = 0 };
+		_hotelService = hotelService;
 	}
 
-	[HttpGet("/api/hotels/{id:int}")]
-	public async Task<ActionResult<HotelDetailsResponse>> Details([FromRoute] int id, [FromQuery] DateTime? checkIn, [FromQuery] DateTime? checkOut, [FromQuery] int? guests)
+	
+	[HttpGet("")]
+	public override Task<PagedResult<HotelResponse>> Get([FromQuery] HotelSearchObject? search = null)
+		=> base.Get(search);
+
+	[HttpGet("search")]
+	public async Task<PagedResult<HotelSearchItemResponse>> Search([FromQuery] HotelSearchObject search)
 	{
-		if (_service is not IHotelService hotelService) return NotFound();
+		var hotelService = (IHotelService)_service;
+		return await hotelService.SearchAsync(search);
+	}
+
+	[HttpGet("{id:int}/details")]
+	public async Task<ActionResult<HotelDetailsResponse>> Details(
+		int id, [FromQuery] DateTime? checkIn, [FromQuery] DateTime? checkOut, [FromQuery] int? guests)
+	{
+		var hotelService = (IHotelService)_service;
 		var dto = await hotelService.GetDetailsAsync(id, checkIn, checkOut, guests);
 		if (dto is null) return NotFound();
 		return dto;

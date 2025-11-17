@@ -35,15 +35,16 @@ public abstract class BaseCRUDService<T,TSearch, TEntity, TInsert, TUpdate>
     
     public virtual async Task<T?> UpdateAsync(int id, TUpdate request)
     {
-        var entity = await  _context.Set<TEntity>().FindAsync(id);
+        var entity = await _context.Set<TEntity>().FindAsync(id);
         if (entity == null) return null;
 
+        MapUpdateToEntity(entity, request);
         await BeforeUpdate(entity, request);
-        MapUpdateToEntity(entity,request);
-        
+
         await _context.SaveChangesAsync();
         return MapToResponse(entity);
     }
+
 
 
     public virtual async Task<bool> DeleteAsync(int id)
