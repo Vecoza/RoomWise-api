@@ -20,7 +20,9 @@ public class Reservation
     [ForeignKey(nameof(RoomType))]
     public int RoomTypeId { get; set; }
 
-    [Required, MaxLength(20)]
+    
+    /*MaxLength(20)*/
+    [Required]
     public string ConfirmationNumber { get; set; } = null!;
 
     [Column(TypeName = "date")]

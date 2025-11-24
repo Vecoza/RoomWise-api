@@ -243,17 +243,14 @@ public class DataContext : IdentityDbContext<AppUser>
             .WithMany(a => a.ReservationAddOns)
             .HasForeignKey(ra => ra.AddOnId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Prevent duplicate AddOn per Reservation
+        e.HasIndex(ra => new { ra.ReservationId, ra.AddOnId })
+            .IsUnique();
     });
 
-    builder.Entity<ReservationAddOn>()
-        .HasOne(ra => ra.Reservation)
-        .WithMany(r => r.AddOns)
-        .HasForeignKey(ra => ra.ReservationId);
 
-    builder.Entity<ReservationAddOn>()
-        .HasOne(ra => ra.AddOn)
-        .WithMany(a => a.ReservationAddOns)
-        .HasForeignKey(ra => ra.AddOnId);
+  
 
     // AddOn → Hotel
     builder.Entity<AddOn>(e =>

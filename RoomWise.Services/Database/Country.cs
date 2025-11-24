@@ -12,7 +12,7 @@ public class Country
     public string Name { get; set; } = null!;
 
     [Column(TypeName = "char(2)"), MaxLength(2)]
-    public string? Iso2 { get; set; }
+    public string? Iso2 { get; set; } = "BA";
 
     public virtual ICollection<City> Cities { get; set; } = new List<City>();
 

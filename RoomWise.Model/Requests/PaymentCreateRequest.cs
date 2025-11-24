@@ -15,7 +15,10 @@ public class PaymentCreateRequest
 
     [MaxLength(30)]
     public string Provider { get; set; } = "Stripe";
-    
+
+    [Range(0, int.MaxValue)]
+    public int? LoyaltyPointsToRedeem { get; set; }
+
     public string? PaymentMethodId { get; set; }
 
 }

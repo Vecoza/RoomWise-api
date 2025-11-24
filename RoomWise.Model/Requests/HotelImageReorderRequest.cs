@@ -5,6 +5,15 @@ namespace RoomWise.Model.Requests;
 public class HotelImageReorderRequest
 {
     [Required]
-    public List<(int Id, int SortOrder)> Items { get; set; } = new();
+    public List<HotelImageReorderItem> Items { get; set; } = new();
+
+    public class HotelImageReorderItem
+    {
+        [Required]
+        public int Id { get; set; }
+
+        [Required]
+        public int SortOrder { get; set; }
+    }
 
 }

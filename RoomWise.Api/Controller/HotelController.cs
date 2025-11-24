@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RoomWise.Model;
 using RoomWise.Model.Requests;
 using RoomWise.Model.Responses;
 using RoomWise.Model.SearchObject;
@@ -8,6 +10,7 @@ namespace RoomWise.Api.Controller;
 
 [ApiController]
 [Route("api/hotels")]
+/*[Authorize(Roles = AppRoles.Administrator)]*/
 public class HotelsController 
 	: BaseCRUDController<HotelResponse, HotelSearchObject, HotelUpsertRequest, HotelUpsertRequest>
 {
@@ -20,10 +23,12 @@ public class HotelsController
 	}
 
 	
+	[AllowAnonymous]
 	[HttpGet("")]
 	public override Task<PagedResult<HotelResponse>> Get([FromQuery] HotelSearchObject? search = null)
 		=> base.Get(search);
 
+	[AllowAnonymous]
 	[HttpGet("search")]
 	public async Task<PagedResult<HotelSearchItemResponse>> Search([FromQuery] HotelSearchObject search)
 	{
@@ -31,6 +36,7 @@ public class HotelsController
 		return await hotelService.SearchAsync(search);
 	}
 
+	[AllowAnonymous]
 	[HttpGet("{id:int}/details")]
 	public async Task<ActionResult<HotelDetailsResponse>> Details(
 		int id, [FromQuery] DateTime? checkIn, [FromQuery] DateTime? checkOut, [FromQuery] int? guests)

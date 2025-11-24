@@ -740,8 +740,7 @@ namespace RoomWise.Api.Migrations
 
                     b.Property<string>("ConfirmationNumber")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -838,7 +837,8 @@ namespace RoomWise.Api.Migrations
 
                     b.HasIndex("AddOnId");
 
-                    b.HasIndex("ReservationId");
+                    b.HasIndex("ReservationId", "AddOnId")
+                        .IsUnique();
 
                     b.ToTable("ReservationAddOns");
                 });

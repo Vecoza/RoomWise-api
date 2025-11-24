@@ -26,10 +26,15 @@ public sealed class HotelImageService
         var ids = req.Items.Select(i => i.Id).ToList();
         var entities = await _db.Set<HotelImage>().Where(x => ids.Contains(x.Id)).ToListAsync(ct);
 
-        foreach (var (id, order) in req.Items)
+
+        var missing = ids.Except(entities.Select(e => e.Id)).ToList();
+        if (missing.Count > 0)
+            throw new ArgumentException($"Hotel image id(s) not found: {string.Join(", ", missing)}");
+
+        foreach (var item in req.Items)
         {
-            var e = entities.First(x => x.Id == id);
-            e.SortOrder = order;
+            var e = entities.First(x => x.Id == item.Id);
+            e.SortOrder = item.SortOrder;
         }
         await _db.SaveChangesAsync(ct);
     }

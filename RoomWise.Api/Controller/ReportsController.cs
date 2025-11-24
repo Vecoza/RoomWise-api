@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RoomWise.Model;
 using RoomWise.Model.Responses;
 using RoomWise.Services.Interface;
 
@@ -7,8 +8,7 @@ namespace RoomWise.Api.Controller;
 
 [ApiController]
 [Route("api/reports")]
-// [Authorize(Roles = "Admin")] // if/when you configure roles
-[Authorize] // for now, just require authenticated user
+/*[Authorize(Roles = AppRoles.Administrator)]*/
 public sealed class ReportsController : ControllerBase
 {
     private readonly IReportService _reports;

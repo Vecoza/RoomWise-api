@@ -148,3 +148,11 @@
 /Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/bin/Debug/net9.0/System.Configuration.ConfigurationManager.dll
 /Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/bin/Debug/net9.0/System.Security.Cryptography.ProtectedData.dll
 /Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/bin/Debug/net9.0/runtimes/win/lib/net9.0/System.Diagnostics.EventLog.Messages.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/bin/Debug/net9.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/bin/Debug/net9.0/Microsoft.IdentityModel.Abstractions.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/bin/Debug/net9.0/Microsoft.IdentityModel.JsonWebTokens.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/bin/Debug/net9.0/Microsoft.IdentityModel.Logging.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/bin/Debug/net9.0/Microsoft.IdentityModel.Protocols.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/bin/Debug/net9.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/bin/Debug/net9.0/Microsoft.IdentityModel.Tokens.dll
+/Users/vedransunjic/Desktop/roomwise-api/RoomWise/RoomWise.Api/bin/Debug/net9.0/System.IdentityModel.Tokens.Jwt.dll

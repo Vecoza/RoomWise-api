@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace RoomWise.Model.Requests;
 
 public class PaymentMethodUpsertRequest
 {
-    [Required]
+    // Set server-side; ignored from client input to avoid binding/validation issues
+    [JsonIgnore]
     public string UserId { get; set; } = string.Empty;
 
     [Required, MaxLength(80)]

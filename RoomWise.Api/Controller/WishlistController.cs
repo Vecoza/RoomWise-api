@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RoomWise.Model;
 using RoomWise.Model.Responses;
 using RoomWise.Services.Interface;
 
@@ -8,7 +9,7 @@ namespace RoomWise.Api.Controller;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
+[Authorize(Roles = $"{AppRoles.Guest},{AppRoles.Administrator}")]
 public class WishlistController : ControllerBase
 {
     private readonly IWishlistService _wishlist;

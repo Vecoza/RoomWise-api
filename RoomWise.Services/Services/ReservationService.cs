@@ -1,4 +1,6 @@
 // RoomWise.Services/Services/ReservationService.cs
+
+using System.Security.Claims;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using RoomWise.Model;
@@ -6,6 +8,7 @@ using RoomWise.Model.Requests;
 using RoomWise.Model.Responses;
 using RoomWise.Model.SearchObject;
 using RoomWise.Services.Interface;
+using Microsoft.AspNetCore.Http;
 using Stripe;
 
 namespace RoomWise.Services.Services;
@@ -15,17 +18,23 @@ public sealed class ReservationService
         IReservationService
 {
     private readonly IRoomAvailabilityService _availability;
-    
     private readonly INotificationService _notifications;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public ReservationService(DbContext context, IMapper mapper, IRoomAvailabilityService availability, INotificationService notifications)
+    public ReservationService(
+        DbContext context,
+        IMapper mapper,
+        IRoomAvailabilityService availability,
+        INotificationService notifications,
+        IHttpContextAccessor httpContextAccessor)
         : base(context, mapper)
     {
         _availability = availability;
         _notifications = notifications;
+        _httpContextAccessor = httpContextAccessor;
     }
 
-   
+
     protected override IQueryable<Reservation> ApplyFilter(IQueryable<Reservation> q, ReservationSearchObject s)
     {
         if (!string.IsNullOrWhiteSpace(s.UserId))
@@ -49,105 +58,123 @@ public sealed class ReservationService
         return q.OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.Id);
     }
 
-    
-    public  async Task<ReservationResponse> InsertAsync(ReservationUpsertRequest request)
+
+    public async Task<ReservationResponse> InsertAsync(ReservationUpsertRequest request)
     {
-     
-        var checkIn  = request.CheckIn.Date;
+
+        var checkIn = request.CheckIn.Date;
         var checkOut = request.CheckOut.Date;
 
         if (checkOut <= checkIn) throw new ArgumentException("CheckOut must be after CheckIn.");
-        if (request.Guests <= 0)  throw new ArgumentException("Guests must be >= 1.");
+        if (request.Guests <= 0) throw new ArgumentException("Guests must be >= 1.");
 
         var roomType = await _context.Set<RoomType>().FindAsync(request.RoomTypeId);
         if (roomType is null) throw new InvalidOperationException("RoomType not found.");
         if (request.Guests > roomType.Capacity)
             throw new InvalidOperationException("Guests exceed room type capacity.");
 
+        if (request.HotelId != roomType.HotelId)
+            throw new InvalidOperationException("Room type does not belong to the specified hotel.");
+
         var nights = (checkOut - checkIn).Days;
-if (nights <= 0) throw new ArgumentException("Invalid date range.");
+        if (nights <= 0) throw new ArgumentException("Invalid date range.");
 
-// 1) Base room nightly
-var nightly = await _context.Set<RoomRate>()
-    .Where(r => r.RoomTypeId == request.RoomTypeId
-             && r.StartDate <= checkIn
-             && r.EndDate   >= checkOut)
-    .Select(r => r.Price)
-    .DefaultIfEmpty(roomType.BasePrice)
-    .MinAsync();
+        // 1) Try to get room rate from DB (nullable)
+        var dbRate = await _context.Set<RoomRate>()
+            .Where(r => r.RoomTypeId == request.RoomTypeId
+                        && r.StartDate <= checkIn
+                        && r.EndDate >= checkOut)
+            .Select(r => (decimal?)r.Price)
+            .MinAsync();
 
-var roomTotal = nightly * nights;
+        // 2) Fallback to BasePrice in memory
+        var nightly = dbRate ?? roomType.BasePrice;
 
-// 2) Add-ons
-decimal addOnsTotal = 0m;
-var addOnItems = request.AddOns ?? new List<ReservationAddOnItem>();
+        var roomTotal = nightly * nights;
 
-if (addOnItems.Count > 0)
-{
-    var addOnIds = addOnItems.Select(a => a.AddOnId).Distinct().ToList();
+        // 2) Add-ons
+        decimal addOnsTotal = 0m;
+        var addOnItems = request.AddOns ?? new List<ReservationAddOnItem>();
 
-    var addOns = await _context.Set<AddOn>()
-        .Where(a => addOnIds.Contains(a.Id))
-        .ToListAsync();
-
-    var addOnById = addOns.ToDictionary(a => a.Id);
-
-        foreach (var item in addOnItems)
+        if (addOnItems.Count > 0)
         {
-            if (!addOnById.TryGetValue(item.AddOnId, out var addOn))
-                throw new InvalidOperationException($"Add-on {item.AddOnId} not found.");
+            var addOnIds = addOnItems.Select(a => a.AddOnId).Distinct().ToList();
 
-            if (addOn.HotelId != roomType.HotelId)
-                throw new InvalidOperationException("Add-on does not belong to this hotel.");
+            var addOns = await _context.Set<AddOn>()
+                .Where(a => addOnIds.Contains(a.Id))
+                .ToListAsync();
 
-            if (item.Quantity <= 0)
-                throw new ArgumentException("Add-on quantity must be >= 1.");
+            var addOnById = addOns.ToDictionary(a => a.Id);
 
-            decimal unitPrice;
-            decimal lineTotal;
+            foreach (var item in addOnItems)
+            {
+                if (!addOnById.TryGetValue(item.AddOnId, out var addOn))
+                    throw new InvalidOperationException($"Add-on {item.AddOnId} not found.");
 
-            var perNight = string.Equals(addOn.PricingModel, "PerNight", StringComparison.OrdinalIgnoreCase);
+                if (addOn.HotelId != roomType.HotelId)
+                    throw new InvalidOperationException("Add-on does not belong to this hotel.");
 
-            unitPrice = addOn.Price;
-            lineTotal = addOn.Price * item.Quantity * (perNight ? nights : 1);
+                if (item.Quantity <= 0)
+                    throw new ArgumentException("Add-on quantity must be >= 1.");
 
-            addOnsTotal += lineTotal;
+                decimal unitPrice;
+                decimal lineTotal;
+
+                var perNight = string.Equals(addOn.PricingModel, "PerNight", StringComparison.OrdinalIgnoreCase);
+
+                unitPrice = addOn.Price;
+                lineTotal = addOn.Price * item.Quantity * (perNight ? nights : 1);
+
+                addOnsTotal += lineTotal;
+            }
         }
-    }
 
         // 3) Create entity
         var entity = new Reservation();
-        MapInsertToEntity(entity, request);
-        entity.PublicId           = entity.PublicId == Guid.Empty ? Guid.NewGuid() : entity.PublicId;
-        entity.CheckIn            = checkIn;
-        entity.CheckOut           = checkOut;
-        entity.Subtotal           = roomTotal + addOnsTotal;
-        entity.Currency           = roomType.Currency;
-        entity.CreatedAt          = DateTime.UtcNow;
-        entity.Status             = "Pending";
+        MapInsertToEntity(entity, request);   // 1) map from request
+
+        var userId = _httpContextAccessor.HttpContext?
+            .User
+            .FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new InvalidOperationException("Authenticated user id not found.");
+
+        entity.UserId = userId;
+        entity.HotelId = roomType.HotelId;
+        entity.RoomTypeId = roomType.Id;
+
+        entity.PublicId = entity.PublicId == Guid.Empty ? Guid.NewGuid() : entity.PublicId;
+        entity.CheckIn = checkIn;
+        entity.CheckOut = checkOut;
+        entity.Subtotal = roomTotal + addOnsTotal;
+        entity.Total = entity.Subtotal + entity.TaxesAndFees + entity.ServiceFee;
+        entity.Currency = roomType.Currency;
+        entity.CreatedAt = DateTime.UtcNow;
+        entity.Status = "Pending";
         entity.ConfirmationNumber = GenerateConfirmationNumber();
 
 
-       
+
         using var tx = await _context.Database.BeginTransactionAsync();
 
         var hasRoomAvailability = _context.Model.FindEntityType(typeof(RoomAvailability)) is not null;
         if (hasRoomAvailability)
         {
-         
+
             await _availability.EnsureRangeConfiguredAsync(entity.RoomTypeId, checkIn, checkOut);
             var ok = await _availability.TryConsumeRangeAsync(entity.RoomTypeId, checkIn, checkOut);
             if (!ok) throw new InvalidOperationException("No availability for selected dates.");
         }
         else
         {
-           
+
             var stock = roomType.Stock;
 
             for (int i = 0; i < nights; i++)
             {
                 var dayStart = checkIn.AddDays(i);
-                var dayEnd   = dayStart.AddDays(1);
+                var dayEnd = dayStart.AddDays(1);
 
                 var overlappingCount = await _context.Set<Reservation>()
                     .Where(r => r.RoomTypeId == request.RoomTypeId
@@ -162,10 +189,10 @@ if (addOnItems.Count > 0)
         }
 
         _context.Set<Reservation>().Add(entity);
-        
+
         await _context.SaveChangesAsync();
-        
-        
+
+
         if (addOnItems.Count > 0)
         {
             var addOnIds = addOnItems.Select(a => a.AddOnId).Distinct().ToList();
@@ -189,10 +216,10 @@ if (addOnItems.Count > 0)
                 reservationAddOns.Add(new ReservationAddOn
                 {
                     ReservationId = entity.Id,
-                    AddOnId       = addOn.Id,
-                    Quantity      = item.Quantity,
-                    UnitPrice     = unitPrice,
-                    LineTotal     = lineTotal
+                    AddOnId = addOn.Id,
+                    Quantity = item.Quantity,
+                    UnitPrice = unitPrice,
+                    LineTotal = lineTotal
                 });
             }
 
@@ -202,7 +229,7 @@ if (addOnItems.Count > 0)
                 await _context.SaveChangesAsync();
             }
         }
-        
+
         await tx.CommitAsync();
 
 
@@ -212,10 +239,10 @@ if (addOnItems.Count > 0)
             {
                 await _notifications.CreateAsync(new NotificationCreateRequest
                 {
-                    UserId        = entity.UserId,
+                    UserId = entity.UserId,
                     ReservationId = entity.Id,
-                    Type          = "reservation_created",
-                    Message       = $"Your reservation {entity.ConfirmationNumber} has been created."
+                    Type = "reservation_created",
+                    Message = $"Your reservation {entity.ConfirmationNumber} has been created."
                 });
             }
         }
@@ -227,11 +254,17 @@ if (addOnItems.Count > 0)
         return MapToResponse(entity);
     }
 
-   
+
     public override Task<ReservationResponse?> UpdateAsync(int id, ReservationUpsertRequest request)
         => base.UpdateAsync(id, request);
 
-   
+    protected override Task BeforeUpdate(Reservation entity, ReservationUpsertRequest request)
+    {
+        entity.Total = entity.Subtotal + entity.TaxesAndFees + entity.ServiceFee;
+        return Task.CompletedTask;
+    }
+
+
     public async Task<bool> CancelAsync(Guid publicId, string requestedByUserId)
     {
         var reservation = await _context.Set<Reservation>()
@@ -249,7 +282,7 @@ if (addOnItems.Count > 0)
 
         using var tx = await _context.Database.BeginTransactionAsync();
 
-        reservation.Status      = "Cancelled";
+        reservation.Status = "Cancelled";
         reservation.CancelledAt = DateTime.UtcNow;
 
         var hasRoomAvailability = _context.Model.FindEntityType(typeof(RoomAvailability)) is not null;
@@ -263,17 +296,17 @@ if (addOnItems.Count > 0)
 
         await _context.SaveChangesAsync();
         await tx.CommitAsync();
-        
+
         try
         {
             if (!string.IsNullOrWhiteSpace(reservation.UserId))
             {
                 await _notifications.CreateAsync(new NotificationCreateRequest
                 {
-                    UserId        = reservation.UserId,
+                    UserId = reservation.UserId,
                     ReservationId = reservation.Id,
-                    Type          = "reservation_cancelled",
-                    Message       = $"Your reservation {reservation.ConfirmationNumber} has been cancelled."
+                    Type = "reservation_cancelled",
+                    Message = $"Your reservation {reservation.ConfirmationNumber} has been cancelled."
                 });
             }
         }
@@ -286,7 +319,7 @@ if (addOnItems.Count > 0)
     }
 
 
-   
+
     public async Task<PagedResult<ReservationResponse>> GetMyAsync(string userId, string? category)
     {
         var q = _context.Set<Reservation>()
@@ -333,14 +366,14 @@ if (addOnItems.Count > 0)
         };
     }
 
-    
-    
+
+
     public async Task<ReservationResponse> CreateWithPaymentIntentAsync(ReservationUpsertRequest request)
     {
         var entity = new Reservation();
         MapInsertToEntity(entity, request);
 
-       await BeforeInsert(entity, request);
+        await BeforeInsert(entity, request);
 
         _context.Set<Reservation>().Add(entity);
         await _context.SaveChangesAsync();
@@ -348,13 +381,13 @@ if (addOnItems.Count > 0)
         return MapToResponse(entity);
     }
 
-   
+
     private static string GenerateConfirmationNumber()
     {
         var token = Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
         return $"RW-{DateTime.UtcNow:yyyyMMddHHmmss}-{token}";
     }
-    
+
     public override async Task<ReservationResponse?> GetByIdAsync(int id) => await base.GetByIdAsync(id);
 
     public async Task<ReservationResponse?> GetByPublicIdAsync(Guid publicId, CancellationToken ct = default)

@@ -18,7 +18,7 @@ public class PaymentMethodService : IPaymentMethodService
         int pageSize,
         CancellationToken ct = default)
     {
-        page     = Math.Max(1, page);
+        page = Math.Max(1, page);
         pageSize = Math.Max(1, pageSize);
 
         var q = _db.Set<PaymentMethod>()
@@ -44,10 +44,10 @@ public class PaymentMethodService : IPaymentMethodService
         PaymentMethodUpsertRequest req,
         CancellationToken ct = default)
     {
-        // Ensure it’s always for current user
+
         req.UserId = userId;
 
-        // If this is default, clear other defaults for this user
+
         if (req.IsDefault)
         {
             var existingDefaults = await _db.Set<PaymentMethod>()
@@ -60,14 +60,14 @@ public class PaymentMethodService : IPaymentMethodService
 
         var entity = new PaymentMethod
         {
-            UserId              = userId,
+            UserId = userId,
             StripePaymentMethodId = req.StripePaymentMethodId,
-            Brand               = req.Brand,
-            Last4               = req.Last4,
-            ExpMonth            = req.ExpMonth,
-            ExpYear             = req.ExpYear,
-            IsDefault           = req.IsDefault,
-            CreatedAt           = DateTime.UtcNow
+            Brand = req.Brand,
+            Last4 = req.Last4,
+            ExpMonth = req.ExpMonth,
+            ExpYear = req.ExpYear,
+            IsDefault = req.IsDefault,
+            CreatedAt = DateTime.UtcNow
         };
 
         _db.Set<PaymentMethod>().Add(entity);
@@ -93,14 +93,14 @@ public class PaymentMethodService : IPaymentMethodService
 
     private static PaymentMethodResponse ToResponse(PaymentMethod pm) => new()
     {
-        Id                  = pm.Id,
-        UserId              = pm.UserId,
+        Id = pm.Id,
+        UserId = pm.UserId,
         StripePaymentMethodId = pm.StripePaymentMethodId,
-        Brand               = pm.Brand,
-        Last4               = pm.Last4,
-        ExpMonth            = pm.ExpMonth,
-        ExpYear             = pm.ExpYear,
-        IsDefault           = pm.IsDefault,
-        CreatedAt           = pm.CreatedAt
+        Brand = pm.Brand,
+        Last4 = pm.Last4,
+        ExpMonth = pm.ExpMonth,
+        ExpYear = pm.ExpYear,
+        IsDefault = pm.IsDefault,
+        CreatedAt = pm.CreatedAt
     };
 }

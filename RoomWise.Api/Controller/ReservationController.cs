@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RoomWise.Model;
 using RoomWise.Model.Requests;
 using RoomWise.Model.Responses;
 using RoomWise.Model.SearchObject;
@@ -9,7 +10,11 @@ using RoomWise.Services.Interface;
 namespace RoomWise.Api.Controller;
 
 
-public sealed class ReservationsController 
+
+[ApiController]
+[Route("api/[controller]")]
+/*[Authorize(Roles = $"{AppRoles.Guest},{AppRoles.Administrator}")]*/
+public class ReservationsController 
     : BaseCRUDController<ReservationResponse, ReservationSearchObject, ReservationUpsertRequest, ReservationUpsertRequest>
 {
     private readonly IReservationService _reservations;
@@ -23,7 +28,7 @@ public sealed class ReservationsController
     }
 
 
-    [HttpGet("/api/reservations/my")]
+    [HttpGet("my")]
     public async Task<ActionResult<PagedResult<ReservationResponse>>> My([FromQuery] string? status)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;

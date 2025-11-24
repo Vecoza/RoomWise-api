@@ -18,7 +18,14 @@ public class HotelImagesController
     [HttpPut("reorder")]
     public async Task<IActionResult> Reorder([FromBody] HotelImageReorderRequest req, CancellationToken ct)
     {
-        await _svc.ReorderAsync(req, ct);
-        return NoContent();
+        try
+        {
+            await _svc.ReorderAsync(req, ct);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }
