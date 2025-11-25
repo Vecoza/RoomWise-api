@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="../build/RoomWise.Api.props" />
-</Project>

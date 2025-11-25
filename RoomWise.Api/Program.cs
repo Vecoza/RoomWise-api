@@ -108,6 +108,14 @@ builder.Services.AddHostedService<ReservationReminderService>();
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Default", policy =>
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
+
 
 
 JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
@@ -218,6 +226,7 @@ await app.SeedLocationDataAsync();
 await app.SeedDemoDataAsync();
 
 
+app.UseCors("Default");
 app.UseAuthentication();
 app.UseAuthorization();
 
