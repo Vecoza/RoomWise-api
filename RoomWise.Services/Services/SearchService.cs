@@ -41,7 +41,53 @@ public sealed class SearchService : ISearchService
 
         var hotelIds = candidateHotels.Select(h => h.Id).ToList();
 
-       
+        // Preload tags
+        var tagsLookup = await _db.Set<HotelTag>()
+            .Include(ht => ht.Tag)
+            .Where(ht => hotelIds.Contains(ht.HotelId))
+            .GroupBy(ht => ht.HotelId)
+            .ToDictionaryAsync(
+                g => g.Key,
+                g => g.Select(x => new TagResponse { Id = x.TagId, Name = x.Tag.Name }).ToList(),
+                ct);
+
+        // Filter by facilities (must include all requested)
+        if (req.FacilityIds is { Length: > 0 })
+        {
+            var requested = req.FacilityIds.Distinct().ToHashSet();
+            var hotelFacilities = await _db.Set<HotelFacility>()
+                .Where(hf => hotelIds.Contains(hf.HotelId))
+                .ToListAsync(ct);
+
+            var okHotels = hotelFacilities
+                .GroupBy(hf => hf.HotelId)
+                .Where(g => requested.IsSubsetOf(g.Select(x => x.FacilityId).ToHashSet()))
+                .Select(g => g.Key)
+                .ToHashSet();
+
+            candidateHotels = candidateHotels.Where(h => okHotels.Contains(h.Id)).ToList();
+            hotelIds = candidateHotels.Select(h => h.Id).ToList();
+        }
+
+        // Filter by add-ons (must include all requested)
+        if (req.AddOnIds is { Length: > 0 })
+        {
+            var requested = req.AddOnIds.Distinct().ToHashSet();
+            var addOns = await _db.Set<AddOn>()
+                .Where(a => hotelIds.Contains(a.HotelId) && a.IsActive)
+                .ToListAsync(ct);
+
+            var okHotels = addOns
+                .GroupBy(a => a.HotelId)
+                .Where(g => requested.IsSubsetOf(g.Select(x => x.Id).ToHashSet()))
+                .Select(g => g.Key)
+                .ToHashSet();
+
+            candidateHotels = candidateHotels.Where(h => okHotels.Contains(h.Id)).ToList();
+            hotelIds = candidateHotels.Select(h => h.Id).ToList();
+        }
+
+
         var roomTypes = await _db.Set<RoomType>()
             .Where(rt => hotelIds.Contains(rt.HotelId) && rt.Capacity >= req.Guests)
             .ToListAsync(ct);
@@ -79,7 +125,7 @@ public sealed class SearchService : ISearchService
         }
         else
         {
-            
+
             await _db.Set<RoomAvailability>()
                 .Where(a => roomTypeIds.Contains(a.RoomTypeId)
                             && a.Date >= checkIn
@@ -105,7 +151,7 @@ public sealed class SearchService : ISearchService
 
             if (hasRoomAvailability)
             {
-                
+
                 for (var i = 0; i < nights; i++)
                 {
                     var d = checkIn.AddDays(i);
@@ -134,27 +180,27 @@ public sealed class SearchService : ISearchService
             }
         }
 
-        
+
         var items = new List<HotelSearchItemResponse>(capacity: candidateHotels.Count);
         foreach (var h in candidateHotels)
         {
             var rts = roomTypes.Where(rt => rt.HotelId == h.Id).ToList();
             if (rts.Count == 0) continue;
 
-           
+
             var eligibleAvailable = rts.Where(IsRoomTypeAvailable).ToList();
             if (eligibleAvailable.Count == 0)
             {
                 continue;
             }
 
-           
+
             var minNightly = eligibleAvailable
                 .Select(rt => nightlyByRoomType[rt.Id])
                 .DefaultIfEmpty(0m)
                 .Min();
 
-            
+            if (req.MinPrice.HasValue && minNightly < req.MinPrice.Value) continue;
             if (req.MaxPrice.HasValue && minNightly > req.MaxPrice.Value) continue;
 
             var thumb = h.Images
@@ -170,19 +216,20 @@ public sealed class SearchService : ISearchService
                 FromPrice = minNightly,
                 Rating = (double)h.Rating,
                 ThumbnailUrl = thumb,
-                HasAvailability = true
+                HasAvailability = true,
+                Tags = tagsLookup.TryGetValue(h.Id, out var list) ? list : new List<TagResponse>()
             });
         }
 
-    
+
         items = (req.Sort?.ToLowerInvariant()) switch
         {
             "rating" => items.OrderByDescending(i => i.Rating).ThenBy(i => i.FromPrice).ToList(),
-            "price"  => items.OrderBy(i => i.FromPrice).ThenByDescending(i => i.Rating).ToList(),
-            _        => items.OrderBy(i => i.Name).ToList()
+            "price" => items.OrderBy(i => i.FromPrice).ThenByDescending(i => i.Rating).ToList(),
+            _ => items.OrderBy(i => i.Name).ToList()
         };
 
-      
+
         var total = items.Count;
         var skip = (Math.Max(1, req.Page) - 1) * Math.Max(1, req.PageSize);
         var pageItems = items.Skip(skip).Take(Math.Max(1, req.PageSize)).ToList();

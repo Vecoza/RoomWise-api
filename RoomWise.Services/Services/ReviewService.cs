@@ -1,4 +1,4 @@
-// RoomWise.Services/Services/ReviewService.cs
+
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using RoomWise.Model;
@@ -28,7 +28,7 @@ public class ReviewService
         if (!string.IsNullOrWhiteSpace(s.FTS))
             q = q.Where(x =>
                 (x.Title != null && EF.Functions.ILike(x.Title, $"%{s.FTS}%")) ||
-                (x.Body  != null && EF.Functions.ILike(x.Body,  $"%{s.FTS}%")));
+                (x.Body != null && EF.Functions.ILike(x.Body, $"%{s.FTS}%")));
         return q.OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.Id);
     }
 
@@ -63,7 +63,7 @@ public class ReviewService
     {
         using var tx = await _ctx.Database.BeginTransactionAsync(ct);
 
- 
+
         var entity = _mapper.Map<Review>(req);
 
         await BeforeInsert(entity, req);
@@ -74,8 +74,8 @@ public class ReviewService
         var hotel = await _ctx.Set<Hotel>().FirstOrDefaultAsync(h => h.Id == req.HotelId, ct)
                     ?? throw new InvalidOperationException("Hotel not found.");
 
-        var count  = hotel.ReviewCount;          
-        var oldAvg = (double)hotel.Rating;        
+        var count = hotel.ReviewCount;
+        var oldAvg = (double)hotel.Rating;
         var newAvg = (oldAvg * count + req.Rating) / (count + 1);
 
         hotel.ReviewCount = count + 1;

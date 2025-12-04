@@ -4,9 +4,8 @@ namespace RoomWise.Services.Interface;
 
 public interface IWishlistService
 {
-	Task<bool> AddAsync(string userId, int hotelId);
-	Task<bool> RemoveAsync(string userId, int hotelId);
-	Task<IReadOnlyList<HotelSearchItemResponse>> ListAsync(string userId);
+    Task<bool> AddAsync(string userId, int hotelId);
+    Task<bool> RemoveAsync(string userId, int hotelId);
+    Task<IReadOnlyList<WishlistResponse>> ListAsync(string userId);
 }
-
 

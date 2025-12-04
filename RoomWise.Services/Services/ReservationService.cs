@@ -1,4 +1,4 @@
-// RoomWise.Services/Services/ReservationService.cs
+
 
 using System.Security.Claims;
 using AutoMapper;
@@ -58,8 +58,8 @@ public sealed class ReservationService
         return q.OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.Id);
     }
 
-
-    public async Task<ReservationResponse> InsertAsync(ReservationUpsertRequest request)
+    //InserAsync
+    public override async Task<ReservationResponse> CreateAsync(ReservationUpsertRequest request)
     {
 
         var checkIn = request.CheckIn.Date;

@@ -14,21 +14,21 @@ using System.Collections.Generic;
 namespace RoomWise.Services.Services;
 
 public sealed class HotelService
-    : BaseCRUDService<HotelResponse, HotelSearchObject, Hotel, HotelUpsertRequest, HotelUpsertRequest>,
-        IHotelService
+	: BaseCRUDService<HotelResponse, HotelSearchObject, Hotel, HotelUpsertRequest, HotelUpsertRequest>,
+		IHotelService
 {
-    public HotelService(DbContext context, IMapper mapper) : base(context, mapper) { }
+	public HotelService(DbContext context, IMapper mapper) : base(context, mapper) { }
 
-    protected override IQueryable<Hotel> ApplyFilter(IQueryable<Hotel> q, HotelSearchObject s)
-    {
-        if (s.CityId.HasValue) q = q.Where(x => x.CityId == s.CityId.Value);
+	protected override IQueryable<Hotel> ApplyFilter(IQueryable<Hotel> q, HotelSearchObject s)
+	{
+		if (s.CityId.HasValue) q = q.Where(x => x.CityId == s.CityId.Value);
 		if (s.CountryId.HasValue) q = q.Where(x => x.City.CountryId == s.CountryId.Value);
-        if (!string.IsNullOrWhiteSpace(s.Name)) q = q.Where(x => x.Name.Contains(s.Name));
+		if (!string.IsNullOrWhiteSpace(s.Name)) q = q.Where(x => x.Name.Contains(s.Name));
 		if (!string.IsNullOrWhiteSpace(s.Query)) q = q.Where(x => x.Name.Contains(s.Query!) || x.Description.Contains(s.Query!));
-        if (s.MinRating.HasValue) q = q.Where(x => x.Rating >= s.MinRating.Value);
-        if (s.MaxRating.HasValue) q = q.Where(x => x.Rating <= s.MaxRating.Value);
+		if (s.MinRating.HasValue) q = q.Where(x => x.Rating >= s.MinRating.Value);
+		if (s.MaxRating.HasValue) q = q.Where(x => x.Rating <= s.MaxRating.Value);
 		return q.OrderByDescending(x => x.Rating).ThenBy(x => x.Id);
-    }
+	}
 
 	public async Task<PagedResult<HotelSearchItemResponse>> SearchAsync(HotelSearchObject search)
 	{
@@ -39,13 +39,16 @@ public sealed class HotelService
 
 		q = ApplyFilter(q, search);
 
-	
+
 		int? total = null;
 		if (search.IncludeTotalCount) total = await q.CountAsync();
 		if (!search.RetrieveAll)
 		{
-			if (search.Page.HasValue) q = q.Skip(search.Page.Value * (search.PageSize ?? 10));
-			if (search.PageSize.HasValue) q = q.Take(search.PageSize.Value);
+			var page = search.Page ?? 1;
+			var size = search.PageSize ?? 10;
+			var skip = (page - 1) * size;
+
+			q = q.Skip(skip).Take(size);
 		}
 
 		var hotels = await q.ToListAsync();
@@ -81,8 +84,8 @@ public sealed class HotelService
 			var roomTypeIds = roomTypes.Select(rt => rt.Id).ToList();
 			availabilities = await _context.Set<RoomAvailability>()
 				.Where(a => roomTypeIds.Contains(a.RoomTypeId)
-				            && a.Date >= checkIn!.Value
-				            && a.Date < checkOut!.Value)
+							&& a.Date >= checkIn!.Value
+							&& a.Date < checkOut!.Value)
 				.ToListAsync();
 		}
 
@@ -92,13 +95,18 @@ public sealed class HotelService
 			var roomTypeIds = roomTypes.Select(rt => rt.Id).ToList();
 			overlappingReservations = await _context.Set<Reservation>()
 				.Where(r => roomTypeIds.Contains(r.RoomTypeId)
-				            && r.Status != "Cancelled"
-				            && r.CheckIn < checkOut!.Value
-				            && checkIn!.Value < r.CheckOut)
+							&& r.Status != "Cancelled"
+							&& r.CheckIn < checkOut!.Value
+							&& checkIn!.Value < r.CheckOut)
 				.ToListAsync();
 		}
 
 		var results = new List<HotelSearchItemResponse>();
+        var tagsLookup = await _context.Set<HotelTag>()
+            .Include(ht => ht.Tag)
+            .Where(ht => hotels.Select(h => h.Id).Contains(ht.HotelId))
+            .GroupBy(ht => ht.HotelId)
+            .ToDictionaryAsync(g => g.Key, g => g.Select(x => new TagResponse { Id = x.TagId, Name = x.Tag.Name }).ToList());
 		foreach (var h in hotels)
 		{
 			var types = hotelIdToRoomTypes.TryGetValue(h.Id, out var list) ? list : new List<RoomType>();
@@ -106,11 +114,11 @@ public sealed class HotelService
 			var eligibleTypes = types.Where(rt => rt.Capacity >= guests).ToList();
 			if (eligibleTypes.Count == 0)
 			{
-				
+
 				if (search.Guests.HasValue) continue;
 			}
 
-			
+
 			decimal fromPrice = 0m;
 			if (eligibleTypes.Count > 0)
 			{
@@ -125,16 +133,16 @@ public sealed class HotelService
 				}
 				else
 				{
-					
+
 					fromPrice = eligibleTypes.Min(rt => rt.BasePrice);
 				}
 
-				
+
 				if (budgetMin.HasValue && fromPrice < budgetMin.Value) continue;
 				if (budgetMax.HasValue && fromPrice > budgetMax.Value) continue;
 			}
 
-		
+
 			bool hasAvailability = true;
 			if (hasDates && eligibleTypes.Count > 0)
 			{
@@ -157,7 +165,7 @@ public sealed class HotelService
 				}
 			}
 
-		
+
 			var item = new HotelSearchItemResponse
 			{
 				Id = h.Id,
@@ -166,7 +174,8 @@ public sealed class HotelService
 				FromPrice = fromPrice,
 				Rating = (double)h.Rating,
 				ThumbnailUrl = h.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault() ?? string.Empty,
-				HasAvailability = hasAvailability
+				HasAvailability = hasAvailability,
+                Tags = tagsLookup.TryGetValue(h.Id, out var t) ? t : new List<TagResponse>()
 			};
 			results.Add(item);
 		}
@@ -209,6 +218,12 @@ public sealed class HotelService
 
 		var eligibleTypes = types.Where(rt => rt.Capacity >= requestedGuests).ToList();
 
+        // Tags for this hotel
+        var tags = await _context.Set<HotelTag>()
+            .Include(ht => ht.Tag)
+            .Where(ht => ht.HotelId == hotel.Id)
+            .Select(ht => new TagResponse { Id = ht.TagId, Name = ht.Tag.Name })
+            .ToListAsync();
 
 		List<RoomRate> rates = new();
 		if (eligibleTypes.Count > 0)
@@ -226,8 +241,8 @@ public sealed class HotelService
 			var ids = eligibleTypes.Select(rt => rt.Id).ToList();
 			availabilities = await _context.Set<RoomAvailability>()
 				.Where(a => ids.Contains(a.RoomTypeId)
-				            && a.Date >= checkIn!.Value.Date
-				            && a.Date < checkOut!.Value.Date)
+							&& a.Date >= checkIn!.Value.Date
+							&& a.Date < checkOut!.Value.Date)
 				.ToListAsync();
 		}
 
@@ -237,9 +252,9 @@ public sealed class HotelService
 			var ids = eligibleTypes.Select(rt => rt.Id).ToList();
 			overlappingReservations = await _context.Set<Reservation>()
 				.Where(r => ids.Contains(r.RoomTypeId)
-				            && r.Status != "Cancelled"
-				            && r.CheckIn < checkOut!.Value
-				            && checkIn!.Value < r.CheckOut)
+							&& r.Status != "Cancelled"
+							&& r.CheckIn < checkOut!.Value
+							&& checkIn!.Value < r.CheckOut)
 				.ToListAsync();
 		}
 
@@ -282,6 +297,73 @@ public sealed class HotelService
 		}
 
 		result.AvailableRoomTypes = details;
+        result.Tags = tags;
 		return result;
     }
+
+	public async Task<PagedResult<HotelSearchItemResponse>> GetHotDealsAsync(int page = 1, int pageSize = 20, CancellationToken ct = default)
+	{
+		var today = DateTime.UtcNow.Date;
+		var soon = today.AddDays(30);
+
+		var promos = await _context.Set<Promotion>()
+			.Where(p => p.IsActive && p.EndDate >= today && p.StartDate <= soon)
+			.ToListAsync(ct);
+
+		var hotelIds = promos
+			.Where(p => p.HotelId.HasValue)
+			.Select(p => p.HotelId!.Value)
+			.Distinct()
+			.ToList();
+
+		if (hotelIds.Count == 0)
+			return new PagedResult<HotelSearchItemResponse> { Items = new List<HotelSearchItemResponse>(), TotalCount = 0 };
+
+		var hotels = await _context.Set<Hotel>()
+			.Include(h => h.City)
+			.Include(h => h.Images)
+			.Where(h => hotelIds.Contains(h.Id))
+			.OrderBy(h => h.Name)
+			.ToListAsync(ct);
+
+		var roomTypes = await _context.Set<RoomType>()
+			.Where(rt => hotelIds.Contains(rt.HotelId))
+			.ToListAsync(ct);
+
+		var groupedRoomTypes = roomTypes.GroupBy(rt => rt.HotelId).ToDictionary(g => g.Key, g => g.ToList());
+
+        var tagsLookup = await _context.Set<HotelTag>()
+            .Include(ht => ht.Tag)
+            .Where(ht => hotelIds.Contains(ht.HotelId))
+            .GroupBy(ht => ht.HotelId)
+            .ToDictionaryAsync(g => g.Key, g => g.Select(x => new TagResponse { Id = x.TagId, Name = x.Tag.Name }).ToList(), ct);
+
+		var items = hotels.Select(h =>
+		{
+			var types = groupedRoomTypes.TryGetValue(h.Id, out var list) ? list : new List<RoomType>();
+			var fromPrice = types.Count > 0 ? types.Min(rt => rt.BasePrice) : 0m;
+
+			return new HotelSearchItemResponse
+			{
+				Id = h.Id,
+				Name = h.Name,
+				City = h.City.Name,
+				FromPrice = fromPrice,
+				Rating = (double)h.Rating,
+				ThumbnailUrl = h.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault() ?? string.Empty,
+				HasAvailability = true,
+                Tags = tagsLookup.TryGetValue(h.Id, out var t) ? t : new List<TagResponse>()
+			};
+		}).ToList();
+
+		var total = items.Count;
+		var skip = Math.Max(0, (page - 1) * Math.Max(1, pageSize));
+		var paged = items.Skip(skip).Take(Math.Max(1, pageSize)).ToList();
+
+		return new PagedResult<HotelSearchItemResponse>
+		{
+			Items = paged,
+			TotalCount = total
+		};
+	}
 }

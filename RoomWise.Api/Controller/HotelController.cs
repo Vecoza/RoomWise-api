@@ -11,7 +11,7 @@ namespace RoomWise.Api.Controller;
 [ApiController]
 [Route("api/hotels")]
 /*[Authorize(Roles = AppRoles.Administrator)]*/
-public class HotelsController 
+public class HotelsController
 	: BaseCRUDController<HotelResponse, HotelSearchObject, HotelUpsertRequest, HotelUpsertRequest>
 {
 	private readonly IHotelService _hotelService;
@@ -22,7 +22,7 @@ public class HotelsController
 		_hotelService = hotelService;
 	}
 
-	
+
 	[AllowAnonymous]
 	[HttpGet("")]
 	public override Task<PagedResult<HotelResponse>> Get([FromQuery] HotelSearchObject? search = null)
@@ -45,5 +45,13 @@ public class HotelsController
 		var dto = await hotelService.GetDetailsAsync(id, checkIn, checkOut, guests);
 		if (dto is null) return NotFound();
 		return dto;
+	}
+
+	[AllowAnonymous]
+	[HttpGet("hot-deals")]
+	public async Task<PagedResult<HotelSearchItemResponse>> HotDeals([FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+	{
+		var hotelService = (IHotelService)_service;
+		return await hotelService.GetHotDealsAsync(page, pageSize, ct);
 	}
 }

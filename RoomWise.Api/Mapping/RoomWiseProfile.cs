@@ -31,7 +31,8 @@ public class RoomWiseProfile : Profile
         CreateMap<Country, CountryResponse>().ReverseMap();
         CreateMap<CountryUpsertRequest, Country>();
 
-        CreateMap<City, CityResponse>().ReverseMap();
+        CreateMap<City, CityResponse>()
+         .ForMember(dest => dest.CountryName, opt => opt.MapFrom(src => src.Country.Name));
         CreateMap<CityUpsertRequest, City>();
 
         // -----------------------
@@ -41,8 +42,8 @@ public class RoomWiseProfile : Profile
         CreateMap<HotelUpsertRequest, Hotel>()
             .ForMember(d => d.Id, opt => opt.Ignore())
             .ForMember(d => d.CreatedAt, opt => opt.Ignore());
-        
-        
+
+
         CreateMap<PhoneContact, PhoneContactResponse>().ReverseMap();
         CreateMap<PhoneContactUpsertRequest, PhoneContact>()
             .ForMember(d => d.Id, opt => opt.Ignore());
@@ -104,23 +105,23 @@ public class RoomWiseProfile : Profile
         CreateMap<RoomAvailability, RoomAvailabilityResponse>().ReverseMap();
         CreateMap<RoomAvailabilityUpsertRequest, RoomAvailability>()
             .ForMember(d => d.Id, opt => opt.Ignore());
-        
-        
+
+
         // -----------------------
         // Reservation + AddOns + AddOn
         // -----------------------
         CreateMap<Reservation, ReservationResponse>().ReverseMap();
         CreateMap<ReservationUpsertRequest, Reservation>()
-            .ForMember(d => d.Id,                  o => o.Ignore())
-            .ForMember(d => d.UserId,              o => o.Ignore())  
-            .ForMember(d => d.ConfirmationNumber,  o => o.Ignore())
-            .ForMember(d => d.CreatedAt,           o => o.Ignore())
-            .ForMember(d => d.Status,              o => o.Ignore())
-            .ForMember(d => d.Payments,            o => o.Ignore())
-            .ForMember(d => d.AddOns,              o => o.Ignore())
-            .ForMember(d => d.CancelledAt,         o => o.Ignore());
-        
-        
+            .ForMember(d => d.Id, o => o.Ignore())
+            .ForMember(d => d.UserId, o => o.Ignore())
+            .ForMember(d => d.ConfirmationNumber, o => o.Ignore())
+            .ForMember(d => d.CreatedAt, o => o.Ignore())
+            .ForMember(d => d.Status, o => o.Ignore())
+            .ForMember(d => d.Payments, o => o.Ignore())
+            .ForMember(d => d.AddOns, o => o.Ignore())
+            .ForMember(d => d.CancelledAt, o => o.Ignore());
+
+
         CreateMap<ReservationAddOn, ReservationAddOnResponse>().ReverseMap();
         CreateMap<ReservationAddOnUpsertRequest, ReservationAddOn>()
             .ForMember(d => d.Reservation, o => o.Ignore())
@@ -136,14 +137,14 @@ public class RoomWiseProfile : Profile
         // -----------------------
         CreateMap<Payment, PaymentResponse>().ReverseMap();
         CreateMap<PaymentCreateRequest, Payment>()
-            .ForMember(d => d.Id,             o => o.Ignore())
-            .ForMember(d => d.CreatedAt,      o => o.Ignore())
-            .ForMember(d => d.Status,         o => o.Ignore())
-            .ForMember(d => d.Provider,       o => o.Ignore())
-            .ForMember(d => d.PaymentIntentId,o => o.Ignore())
-            .ForMember(d => d.ChargeId,       o => o.Ignore());
-        
-        
+            .ForMember(d => d.Id, o => o.Ignore())
+            .ForMember(d => d.CreatedAt, o => o.Ignore())
+            .ForMember(d => d.Status, o => o.Ignore())
+            .ForMember(d => d.Provider, o => o.Ignore())
+            .ForMember(d => d.PaymentIntentId, o => o.Ignore())
+            .ForMember(d => d.ChargeId, o => o.Ignore());
+
+
         // -----------------------
         // Review
         // -----------------------
@@ -158,15 +159,15 @@ public class RoomWiseProfile : Profile
         CreateMap<Wishlist, WishlistResponse>().ReverseMap();
 
         CreateMap<WishlistUpsertRequest, Wishlist>()
-            .ForMember(d => d.Id,        o => o.Ignore())
-            .ForMember(d => d.CreatedAt, o => o.Ignore()); 
+            .ForMember(d => d.Id, o => o.Ignore())
+            .ForMember(d => d.CreatedAt, o => o.Ignore());
         // -----------------------
         // Promotion
         // -----------------------
         CreateMap<Promotion, PromotionResponse>().ReverseMap();
         CreateMap<PromotionUpsertRequest, Promotion>()
             .ForMember(d => d.Id, opt => opt.Ignore());
-           
+
         // -----------------------
         // Notification
         // -----------------------
@@ -191,8 +192,8 @@ public class RoomWiseProfile : Profile
             .ForMember(d => d.Id, opt => opt.Ignore())
             .ForMember(d => d.CreatedAt, opt => opt.Ignore())
             .ForMember(d => d.ProcessedAt, opt => opt.Ignore());
-        
-        
+
+
 
         CreateMap<LoyaltyPoint, LoyaltyPointResponse>();
     }

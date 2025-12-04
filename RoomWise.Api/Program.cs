@@ -101,6 +101,9 @@ builder.Services.AddTransient<IPaymentMethodService, PaymentMethodService>();
 builder.Services.AddTransient<IAddOnService, AddOnService>();
 builder.Services.AddTransient<IReportService, ReportService>();
 builder.Services.AddTransient<IStatisticsService, StatisticsService>();
+builder.Services.AddTransient<ICountryService, CountryService>();
+builder.Services.AddTransient<ICityService, CityService>();
+builder.Services.AddTransient<IFacilityService, FacilityService>();
 
 
 builder.Services.AddHostedService<ReservationReminderService>();
@@ -141,7 +144,7 @@ builder.Services
         {
             OnMessageReceived = context =>
             {
-              
+
                 if (string.IsNullOrWhiteSpace(context.Token))
                 {
                     var authHeader = context.Request.Headers["Authorization"].ToString();

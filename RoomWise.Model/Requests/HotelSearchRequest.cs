@@ -7,7 +7,10 @@ public class HotelSearchRequest
     public DateTime CheckIn { get; set; }         
     public DateTime CheckOut { get; set; }         
     public int Guests { get; set; } = 1;          
+    public decimal? MinPrice { get; set; }
     public decimal? MaxPrice { get; set; }         
+    public int[]? FacilityIds { get; set; }
+    public int[]? AddOnIds { get; set; }
     
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 12;

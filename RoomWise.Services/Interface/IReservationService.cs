@@ -11,8 +11,8 @@ namespace RoomWise.Services.Interface
         Task<bool> CancelAsync(Guid publicId, string requestedByUserId);
         Task<PagedResult<ReservationResponse>> GetMyAsync(string userId, string? category);
 
-        
-        Task<ReservationResponse> InsertAsync(ReservationUpsertRequest request);
+
+        new Task<ReservationResponse> CreateAsync(ReservationUpsertRequest request);
         Task<ReservationResponse?> GetByPublicIdAsync(Guid publicId, CancellationToken ct = default);
 
         Task<(PaymentResponse Payment, string ClientSecret)?> FindActivePaymentAsync(int reservationId);

@@ -6,4 +6,5 @@ public class WishlistResponse
     public string UserId { get; set; } = null!;
     public int HotelId { get; set; }
     public DateTime CreatedAt { get; set; }
+    public HotelSearchItemResponse Hotel { get; set; } = new();
 }

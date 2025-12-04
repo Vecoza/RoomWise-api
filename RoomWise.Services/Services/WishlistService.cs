@@ -13,23 +13,22 @@ public class WishlistService : IWishlistService
 
     public async Task<bool> AddAsync(string userId, int hotelId)
     {
-        // userId already as string
+
         var userIdStr = userId;
 
-        // 1) Check hotel exists
+
         var hotelExists = await _context.Set<Hotel>()
             .AsNoTracking()
             .AnyAsync(h => h.Id == hotelId);
 
         if (!hotelExists) return false;
 
-        // 2) Check if already in wishlist
         var already = await _context.Set<Wishlist>()
             .AnyAsync(w => w.UserId == userIdStr && w.HotelId == hotelId);
 
         if (already) return true;
 
-        // 3) Insert
+
         _context.Set<Wishlist>().Add(new Wishlist
         {
             UserId = userIdStr,
@@ -55,7 +54,7 @@ public class WishlistService : IWishlistService
         return true;
     }
 
-    public async Task<IReadOnlyList<HotelSearchItemResponse>> ListAsync(string userId)
+    public async Task<IReadOnlyList<WishlistResponse>> ListAsync(string userId)
     {
         var userIdStr = userId;
 
@@ -65,8 +64,10 @@ public class WishlistService : IWishlistService
             join h in _context.Set<Hotel>().AsNoTracking() on w.HotelId equals h.Id
             select new
             {
+                WishlistId = w.Id,
+                w.UserId,
+                w.HotelId,
                 w.CreatedAt,
-                h.Id,
                 h.Name,
                 CityName = h.City.Name,
                 ThumbnailUrl = _context.Set<HotelImage>()
@@ -88,15 +89,27 @@ public class WishlistService : IWishlistService
 
         var list = await query
             .OrderByDescending(x => x.CreatedAt)
-            .Select(x => new HotelSearchItemResponse
+            .Select(x => new WishlistResponse
             {
-                Id = x.Id,
-                Name = x.Name,
-                City = x.CityName ?? string.Empty,
-                FromPrice = x.FromPrice ?? 0m,
-                Rating = x.Rating,
-                ThumbnailUrl = x.ThumbnailUrl ?? string.Empty,
-                HasAvailability = true
+                Id = x.WishlistId,
+                UserId = x.UserId,
+                HotelId = x.HotelId,
+                CreatedAt = x.CreatedAt,
+                Hotel = new HotelSearchItemResponse
+                {
+                    Id = x.HotelId,
+                    Name = x.Name,
+                    City = x.CityName ?? string.Empty,
+                    FromPrice = x.FromPrice ?? 0m,
+                    Rating = x.Rating,
+                    ThumbnailUrl = x.ThumbnailUrl ?? string.Empty,
+                    HasAvailability = true,
+                    Tags = _context.Set<HotelTag>()
+                        .Where(ht => ht.HotelId == x.HotelId)
+                        .Include(ht => ht.Tag)
+                        .Select(ht => new TagResponse { Id = ht.TagId, Name = ht.Tag.Name })
+                        .ToList()
+                }
             })
             .ToListAsync();
 

@@ -9,6 +9,6 @@ public class HotelSearchItemResponse
 	public double Rating { get; set; }
 	public string ThumbnailUrl { get; set; } = string.Empty;
 	public bool HasAvailability { get; set; }
+    public List<TagResponse> Tags { get; set; } = new();
 }
-
 

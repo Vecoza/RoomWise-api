@@ -56,7 +56,7 @@ public class PromotionService
 
         var hasPct = req.DiscountPercent is not null && req.DiscountPercent.Value > 0;
         var hasFix = req.DiscountFixed is not null && req.DiscountFixed.Value > 0;
-        if (hasPct == hasFix) 
+        if (hasPct == hasFix)
             throw new ArgumentException("Provide either DiscountPercent or DiscountFixed (not both).");
 
         if (req.DiscountPercent is { } p && (p < 0 || p > 100))
@@ -81,7 +81,7 @@ public class PromotionService
                         && p.EndDate >= toIncl
                         && p.MinNights <= nights);
 
-         if (hotelId.HasValue)
+        if (hotelId.HasValue)
             q = q.Where(p => p.HotelId == hotelId.Value || p.HotelId == null);
         else
             q = q.Where(p => p.HotelId == null);

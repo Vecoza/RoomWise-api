@@ -11,6 +11,7 @@ public class HotelDetailsResponse
 	public IEnumerable<string> Amenities { get; set; } = Array.Empty<string>();
 	public IEnumerable<string> Photos { get; set; } = Array.Empty<string>();
 	public IEnumerable<AvailableRoomType> AvailableRoomTypes { get; set; } = Array.Empty<AvailableRoomType>();
+    public IEnumerable<TagResponse> Tags { get; set; } = Array.Empty<TagResponse>();
 }
 
 public class AvailableRoomType
@@ -21,5 +22,4 @@ public class AvailableRoomType
 	public decimal NightlyPrice { get; set; }
 	public int RoomsLeft { get; set; }
 }
-
 

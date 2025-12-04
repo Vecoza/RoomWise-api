@@ -14,7 +14,7 @@ namespace RoomWise.Api.Controller;
 [ApiController]
 [Route("api/[controller]")]
 /*[Authorize(Roles = $"{AppRoles.Guest},{AppRoles.Administrator}")]*/
-public class ReservationsController 
+public class ReservationsController
     : BaseCRUDController<ReservationResponse, ReservationSearchObject, ReservationUpsertRequest, ReservationUpsertRequest>
 {
     private readonly IReservationService _reservations;
@@ -51,22 +51,22 @@ public class ReservationsController
         if (!result) return NotFound();
         return NoContent();
     }
-    
- 
+
+
     [HttpPost("with-payment-intent")]
     public async Task<ActionResult<object>> CreateWithPaymentIntent(
         [FromBody] ReservationUpsertRequest request,
         [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey = null,
         CancellationToken ct = default)
     {
-  
-        var reservation = await _reservations.InsertAsync(request);
 
-        
+        var reservation = await _reservations.CreateAsync(request);
+
+
         var existing = await _reservations.FindActivePaymentAsync(reservation.Id);
         if (existing is not null)
         {
-            var (existingPayment, existingClientSecret) = existing.Value; 
+            var (existingPayment, existingClientSecret) = existing.Value;
             return Ok(new
             {
                 reservation,
@@ -75,15 +75,15 @@ public class ReservationsController
             });
         }
 
-       (PaymentResponse payment, string clientSecret) = await _payments.CreatePaymentIntentAsync(
-            new PaymentCreateRequest
-            {
-                ReservationId = reservation.Id,
-                Amount = reservation.Subtotal,
-                Currency = reservation.Currency,
-                Provider = "Stripe"
-            }
-        );
+        (PaymentResponse payment, string clientSecret) = await _payments.CreatePaymentIntentAsync(
+             new PaymentCreateRequest
+             {
+                 ReservationId = reservation.Id,
+                 Amount = reservation.Subtotal,
+                 Currency = reservation.Currency,
+                 Provider = "Stripe"
+             }
+         );
         return Ok(new { reservation, payment, clientSecret });
     }
 

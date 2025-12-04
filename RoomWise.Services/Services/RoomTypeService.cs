@@ -29,16 +29,16 @@ public sealed class RoomTypeService
 
     protected override Task BeforeInsert(RoomType entity, RoomTypeUpsertRequest req)
     {
-         if (entity.CreatedAt == default) entity.CreatedAt = DateTime.UtcNow;
+        if (entity.CreatedAt == default) entity.CreatedAt = DateTime.UtcNow;
 
-         entity.Currency = string.IsNullOrWhiteSpace(req.Currency)
-            ? "EUR"
-            : req.Currency!.Trim().ToUpperInvariant();
+        entity.Currency = string.IsNullOrWhiteSpace(req.Currency)
+           ? "EUR"
+           : req.Currency!.Trim().ToUpperInvariant();
 
-         if (entity.Currency.Length != 3) throw new ArgumentException("Currency must be 3 letters.");
-        if (entity.BasePrice < 0)        throw new ArgumentException("BasePrice cannot be negative.");
-        if (entity.Stock < 0)            throw new ArgumentException("Stock cannot be negative.");
-        if (entity.Capacity < 1)         throw new ArgumentException("Capacity must be >= 1.");
+        if (entity.Currency.Length != 3) throw new ArgumentException("Currency must be 3 letters.");
+        if (entity.BasePrice < 0) throw new ArgumentException("BasePrice cannot be negative.");
+        if (entity.Stock < 0) throw new ArgumentException("Stock cannot be negative.");
+        if (entity.Capacity < 1) throw new ArgumentException("Capacity must be >= 1.");
 
         return Task.CompletedTask;
     }
@@ -52,8 +52,8 @@ public sealed class RoomTypeService
         }
 
         if (entity.BasePrice < 0) throw new ArgumentException("BasePrice cannot be negative.");
-        if (entity.Stock < 0)     throw new ArgumentException("Stock cannot be negative.");
-        if (entity.Capacity < 1)  throw new ArgumentException("Capacity must be >= 1.");
+        if (entity.Stock < 0) throw new ArgumentException("Stock cannot be negative.");
+        if (entity.Capacity < 1) throw new ArgumentException("Capacity must be >= 1.");
 
         return Task.CompletedTask;
     }

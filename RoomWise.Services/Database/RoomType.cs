@@ -1,4 +1,3 @@
-// RoomWise.Model/RoomType.cs
 
 using System.ComponentModel.DataAnnotations;
 
@@ -33,8 +32,8 @@ public class RoomType
     public int Stock { get; set; } = 0;
 
     public DateTime CreatedAt { get; set; }
-    
-    
+
+
     public virtual Hotel Hotel { get; set; } = null!;
     public virtual ICollection<RoomTypeImage> Images { get; set; } = new List<RoomTypeImage>();
     public virtual ICollection<RoomRate> Rates { get; set; } = new List<RoomRate>();
