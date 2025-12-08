@@ -49,7 +49,7 @@ public class HotelsController
 
 	[AllowAnonymous]
 	[HttpGet("hot-deals")]
-	public async Task<PagedResult<HotelSearchItemResponse>> HotDeals([FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+	public async Task<PagedResult<HotelSearchItemResponse>> HotDeals([FromQuery] int page = 0, [FromQuery] int pageSize = 20, CancellationToken ct = default)
 	{
 		var hotelService = (IHotelService)_service;
 		return await hotelService.GetHotDealsAsync(page, pageSize, ct);

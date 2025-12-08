@@ -44,9 +44,9 @@ public sealed class HotelService
 		if (search.IncludeTotalCount) total = await q.CountAsync();
 		if (!search.RetrieveAll)
 		{
-			var page = search.Page ?? 1;
+			var page = Math.Max(0, search.Page ?? 0);
 			var size = search.PageSize ?? 10;
-			var skip = (page - 1) * size;
+			var skip = page * size;
 
 			q = q.Skip(skip).Take(size);
 		}
@@ -357,8 +357,10 @@ public sealed class HotelService
 		}).ToList();
 
 		var total = items.Count;
-		var skip = Math.Max(0, (page - 1) * Math.Max(1, pageSize));
-		var paged = items.Skip(skip).Take(Math.Max(1, pageSize)).ToList();
+		var safeSize = Math.Max(1, pageSize);
+		var safePage = Math.Max(0, page);
+		var skip = safePage * safeSize;
+		var paged = items.Skip(skip).Take(safeSize).ToList();
 
 		return new PagedResult<HotelSearchItemResponse>
 		{

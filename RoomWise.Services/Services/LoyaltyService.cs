@@ -62,15 +62,17 @@ public class LoyaltyService : ILoyaltyService
         return profile?.LoyaltyBalance ?? 0;
     }
 
-    public async Task<PagedResult<LoyaltyPointResponse>> GetHistoryAsync(string userId, int page = 1, int pageSize = 20, CancellationToken ct = default)
+    public async Task<PagedResult<LoyaltyPointResponse>> GetHistoryAsync(string userId, int page = 0, int pageSize = 20, CancellationToken ct = default)
     {
         var q = _db.Set<LoyaltyPoint>()
             .Where(x => x.UserId == userId)
             .OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.Id);
 
         var total = await q.CountAsync(ct);
-        var items = await q.Skip((Math.Max(1, page)-1)*Math.Max(1, pageSize))
-                           .Take(Math.Max(1, pageSize))
+        var safePage = Math.Max(0, page);
+        var safeSize = Math.Max(1, pageSize);
+        var items = await q.Skip(safePage * safeSize)
+                           .Take(safeSize)
                            .ToListAsync(ct);
 
         return new PagedResult<LoyaltyPointResponse>

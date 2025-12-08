@@ -33,11 +33,9 @@ public class BaseService<T, TSearch, TEntity> : IService<T, TSearch>
 
         if (!search.RetrieveAll)
         {
-            if (search.Page.HasValue) query = query.Skip(search.Page.Value * (search.PageSize ?? 10));
-            if (search.PageSize.HasValue)
-            {
-                query = query.Take(search.PageSize.Value);
-            }
+            var pageSize = search.PageSize ?? 10;
+            var page = Math.Max(0, search.Page ?? 0);
+            query = query.Skip(page * pageSize).Take(pageSize);
         }
 
         var list = await query.ToListAsync();

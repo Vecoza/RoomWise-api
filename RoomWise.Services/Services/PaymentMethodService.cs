@@ -18,7 +18,7 @@ public class PaymentMethodService : IPaymentMethodService
         int pageSize,
         CancellationToken ct = default)
     {
-        page = Math.Max(1, page);
+        page = Math.Max(0, page);
         pageSize = Math.Max(1, pageSize);
 
         var q = _db.Set<PaymentMethod>()
@@ -28,7 +28,7 @@ public class PaymentMethodService : IPaymentMethodService
 
         var total = await q.CountAsync(ct);
         var items = await q
-            .Skip((page - 1) * pageSize)
+            .Skip(page * pageSize)
             .Take(pageSize)
             .ToListAsync(ct);
 

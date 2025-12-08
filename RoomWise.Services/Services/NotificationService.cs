@@ -38,7 +38,7 @@ public class NotificationService : INotificationService
         int pageSize,
         CancellationToken ct = default)
     {
-        page     = Math.Max(1, page);
+        page     = Math.Max(0, page);
         pageSize = Math.Max(1, pageSize);
 
         var q = _db.Set<Notification>()
@@ -48,7 +48,7 @@ public class NotificationService : INotificationService
 
         var total = await q.CountAsync(ct);
         var items = await q
-            .Skip((page - 1) * pageSize)
+            .Skip(page * pageSize)
             .Take(pageSize)
             .ToListAsync(ct);
 

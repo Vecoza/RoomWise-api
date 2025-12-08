@@ -7,10 +7,6 @@ using RoomWise.Model;
 
 namespace RoomWise.Api.Background;
 
-/// <summary>
-/// Marks finished stays as Completed once their checkout date has passed.
-/// Runs periodically in the background.
-/// </summary>
 public sealed class ReservationCompletionService : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;

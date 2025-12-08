@@ -231,8 +231,10 @@ public sealed class SearchService : ISearchService
 
 
         var total = items.Count;
-        var skip = (Math.Max(1, req.Page) - 1) * Math.Max(1, req.PageSize);
-        var pageItems = items.Skip(skip).Take(Math.Max(1, req.PageSize)).ToList();
+        var safePage = Math.Max(0, req.Page);
+        var safeSize = Math.Max(1, req.PageSize);
+        var skip = safePage * safeSize;
+        var pageItems = items.Skip(skip).Take(safeSize).ToList();
 
         return new PagedResult<HotelSearchItemResponse>
         {

@@ -88,15 +88,17 @@ public class ReviewService
     }
 
     public async Task<PagedResult<ReviewResponse>> ListByHotelAsync(
-        int hotelId, int page = 1, int pageSize = 10, CancellationToken ct = default)
+        int hotelId, int page = 0, int pageSize = 10, CancellationToken ct = default)
     {
         var q = _ctx.Set<Review>()
             .Where(r => r.HotelId == hotelId)
             .OrderByDescending(r => r.CreatedAt);
 
         var total = await q.CountAsync(ct);
-        var items = await q.Skip((Math.Max(1, page) - 1) * Math.Max(1, pageSize))
-                           .Take(Math.Max(1, pageSize))
+        var safePage = Math.Max(0, page);
+        var safeSize = Math.Max(1, pageSize);
+        var items = await q.Skip(safePage * safeSize)
+                           .Take(safeSize)
                            .ToListAsync(ct);
 
         return new PagedResult<ReviewResponse>
