@@ -107,6 +107,7 @@ builder.Services.AddTransient<IFacilityService, FacilityService>();
 
 
 builder.Services.AddHostedService<ReservationReminderService>();
+builder.Services.AddHostedService<ReservationCompletionService>();
 
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();

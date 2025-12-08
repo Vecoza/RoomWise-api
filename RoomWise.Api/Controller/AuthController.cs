@@ -55,6 +55,7 @@ public class AuthController : ControllerBase
             UserId = user.Id,
             FirstName = request.FirstName,
             LastName = request.LastName,
+            AvatarUrl = null,
             PreferredLanguage = "en",
             LoyaltyBalance = 0,
             CreatedAt = DateTime.UtcNow,

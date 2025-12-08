@@ -19,6 +19,9 @@ public class UserProfile
     [MaxLength(10)]
     public string PreferredLanguage { get; set; } = "en";
 
+    [MaxLength(512)]
+    public string? AvatarUrl { get; set; }
+
     public int LoyaltyBalance { get; set; } = 0;
 
     public DateTime CreatedAt { get; set; }

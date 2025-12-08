@@ -529,6 +529,69 @@ END$$;";
                     HotelId = 2,
                     Url = "https://miro.medium.com/v2/1*V-1_xLadALuv6ueJsO3o_A.jpeg",
                     SortOrder = 1
+                },
+                new HotelImage
+                {
+                    Id = 4,
+                    HotelId = 2,
+                    Url = "https://images.unsplash.com/photo-1501117716987-c8e1ecb210af",
+                    SortOrder = 2
+                },
+                new HotelImage
+                {
+                    Id = 5,
+                    HotelId = 1,
+                    Url = "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
+                    SortOrder = 3
+                },
+                new HotelImage
+                {
+                    Id = 6,
+                    HotelId = 1,
+                    Url = "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb",
+                    SortOrder = 4
+                },
+                new HotelImage
+                {
+                    Id = 7,
+                    HotelId = 3,
+                    Url = "https://images.unsplash.com/photo-1528909514045-2fa4ac7a08ba",
+                    SortOrder = 1
+                },
+                new HotelImage
+                {
+                    Id = 8,
+                    HotelId = 3,
+                    Url = "https://images.unsplash.com/photo-1507652955-f3dcef5a3be5",
+                    SortOrder = 2
+                },
+                new HotelImage
+                {
+                    Id = 9,
+                    HotelId = 3,
+                    Url = "https://images.unsplash.com/photo-1505691938895-1758d7feb511",
+                    SortOrder = 3
+                },
+                new HotelImage
+                {
+                    Id = 10,
+                    HotelId = 4,
+                    Url = "https://images.unsplash.com/photo-1496417263034-38ec4f0b665a",
+                    SortOrder = 1
+                },
+                new HotelImage
+                {
+                    Id = 11,
+                    HotelId = 4,
+                    Url = "https://images.unsplash.com/photo-1521783988139-89396b1d92a9",
+                    SortOrder = 2
+                },
+                new HotelImage
+                {
+                    Id = 12,
+                    HotelId = 4,
+                    Url = "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
+                    SortOrder = 3
                 }
             );
             await ctx.SaveChangesAsync();
@@ -657,6 +720,80 @@ END$$;";
                     Status = "Pending",
                     ConfirmationNumber = "RW-DEMO-0004",
                     CreatedAt = DateTime.UtcNow
+                },
+                // Past stay (completed)
+                new Reservation
+                {
+                    PublicId = Guid.NewGuid(),
+                    UserId = demoUserId,
+                    HotelId = 2,
+                    RoomTypeId = 3,
+                    CheckIn = new DateTime(2024, 10, 5),
+                    CheckOut = new DateTime(2024, 10, 8),
+                    Guests = 2,
+                    Subtotal = 120m * 3,
+                    TaxesAndFees = 0m,
+                    ServiceFee = 0m,
+                    Currency = "EUR",
+                    Status = "Completed",
+                    ConfirmationNumber = "RW-DEMO-0005",
+                    CreatedAt = DateTime.UtcNow.AddMonths(-2)
+                },
+                // Another past stay (completed)
+                new Reservation
+                {
+                    PublicId = Guid.NewGuid(),
+                    UserId = demoUserId,
+                    HotelId = 3,
+                    RoomTypeId = 6,
+                    CheckIn = new DateTime(2024, 9, 12),
+                    CheckOut = new DateTime(2024, 9, 15),
+                    Guests = 1,
+                    Subtotal = 95m * 3,
+                    TaxesAndFees = 0m,
+                    ServiceFee = 0m,
+                    Currency = "EUR",
+                    Status = "Completed",
+                    ConfirmationNumber = "RW-DEMO-0006",
+                    CreatedAt = DateTime.UtcNow.AddMonths(-3)
+                },
+                // Cancelled reservation
+                new Reservation
+                {
+                    PublicId = Guid.NewGuid(),
+                    UserId = demoUserId,
+                    HotelId = 1,
+                    RoomTypeId = 2,
+                    CheckIn = new DateTime(2025, 1, 10),
+                    CheckOut = new DateTime(2025, 1, 12),
+                    Guests = 2,
+                    Subtotal = 90m * 2,
+                    TaxesAndFees = 0m,
+                    ServiceFee = 0m,
+                    Currency = "EUR",
+                    Status = "Cancelled",
+                    CancelledAt = DateTime.UtcNow.AddDays(-10),
+                    ConfirmationNumber = "RW-DEMO-0007",
+                    CreatedAt = DateTime.UtcNow.AddDays(-20)
+                },
+                // Another cancelled reservation
+                new Reservation
+                {
+                    PublicId = Guid.NewGuid(),
+                    UserId = demoUserId,
+                    HotelId = 4,
+                    RoomTypeId = 8,
+                    CheckIn = new DateTime(2025, 2, 5),
+                    CheckOut = new DateTime(2025, 2, 7),
+                    Guests = 1,
+                    Subtotal = 110m * 2,
+                    TaxesAndFees = 0m,
+                    ServiceFee = 0m,
+                    Currency = "EUR",
+                    Status = "Cancelled",
+                    CancelledAt = DateTime.UtcNow.AddDays(-5),
+                    ConfirmationNumber = "RW-DEMO-0008",
+                    CreatedAt = DateTime.UtcNow.AddDays(-15)
                 }
             };
 

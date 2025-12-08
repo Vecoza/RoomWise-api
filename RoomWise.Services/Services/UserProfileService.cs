@@ -36,6 +36,7 @@ public class UserProfileService : IUserProfileService
                 FirstName = req.FirstName,
                 LastName  = req.LastName,
                 Phone     = req.Phone,
+                AvatarUrl = req.AvatarUrl,
                 PreferredLanguage = req.PreferredLanguage,
                 LoyaltyBalance = 0,
                 CreatedAt = DateTime.UtcNow,
@@ -48,6 +49,7 @@ public class UserProfileService : IUserProfileService
             entity.FirstName = req.FirstName;
             entity.LastName  = req.LastName;
             entity.Phone     = req.Phone;
+            entity.AvatarUrl = req.AvatarUrl;
             entity.PreferredLanguage = req.PreferredLanguage;
             entity.UpdatedAt = DateTime.UtcNow;
         }

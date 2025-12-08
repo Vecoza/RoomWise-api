@@ -16,4 +16,7 @@ public class UserProfileUpsertRequest
 
     [MaxLength(10)]
     public string PreferredLanguage { get; set; } = "en";
+
+    [MaxLength(512)]
+    public string? AvatarUrl { get; set; }
 }

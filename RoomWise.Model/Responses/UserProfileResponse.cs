@@ -7,6 +7,7 @@ public class UserProfileResponse
     public string LastName { get; set; } = "";
     public string? Phone { get; set; }
     public string PreferredLanguage { get; set; } = "en";
+    public string? AvatarUrl { get; set; }
     public int LoyaltyBalance { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

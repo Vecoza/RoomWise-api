@@ -38,6 +38,7 @@ public sealed class MeProfileController : ControllerBase
         {
             FirstName = User.Identity?.Name ?? string.Empty,
             LastName = string.Empty,
+            AvatarUrl = null,
             PreferredLanguage = "en",
             Phone = null
         }, ct);

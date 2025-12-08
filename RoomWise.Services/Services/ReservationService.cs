@@ -277,8 +277,10 @@ public sealed class ReservationService
             return false;
 
         if (reservation.Status == "Cancelled") return true;
+        if (reservation.Status == "Completed") return false;
         if (reservation.Status != "Pending" && reservation.Status != "Confirmed") return false;
-        if (DateTime.UtcNow.Date >= reservation.CheckIn.Date) return false;
+        // Must cancel at least 24 hours before check-in
+        if (DateTime.UtcNow >= reservation.CheckIn.AddDays(-1)) return false;
 
         using var tx = await _context.Database.BeginTransactionAsync();
 
