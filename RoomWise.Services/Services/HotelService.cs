@@ -27,6 +27,19 @@ public sealed class HotelService
 		if (!string.IsNullOrWhiteSpace(s.Query)) q = q.Where(x => x.Name.Contains(s.Query!) || x.Description.Contains(s.Query!));
 		if (s.MinRating.HasValue) q = q.Where(x => x.Rating >= s.MinRating.Value);
 		if (s.MaxRating.HasValue) q = q.Where(x => x.Rating <= s.MaxRating.Value);
+
+		if (s.TagId.HasValue)
+		{
+			q = q.Where(h => h.HotelTags.Any(ht => ht.TagId == s.TagId.Value));
+		}
+
+		if (!string.IsNullOrWhiteSpace(s.TagName))
+		{
+			var name = s.TagName.Trim();
+			q = q.Where(h => h.HotelTags.Any(ht => ht.Tag.Name.Contains(name)));
+		}
+
+
 		return q.OrderByDescending(x => x.Rating).ThenBy(x => x.Id);
 	}
 
@@ -35,6 +48,8 @@ public sealed class HotelService
 		var q = _context.Set<Hotel>()
 			.Include(h => h.City)
 			.Include(h => h.Images)
+			.Include(h => h.HotelTags)
+				   .ThenInclude(ht => ht.Tag)
 			.AsQueryable();
 
 		q = ApplyFilter(q, search);
@@ -101,12 +116,33 @@ public sealed class HotelService
 				.ToListAsync();
 		}
 
+		// hotel ids in this result set
+		var hotelIds = hotels.Select(h => h.Id).ToList();
+
+		// aggregate ratings for these hotels
+		var ratingStats = await _context.Set<Review>()
+			.Where(r => hotelIds.Contains(r.HotelId))
+			.GroupBy(r => r.HotelId)
+			.Select(g => new
+			{
+				HotelId = g.Key,
+				AvgRating = g.Average(r => r.Rating),
+				Count = g.Count()
+			})
+			.ToListAsync();
+
+		var ratingLookup = ratingStats.ToDictionary(
+			x => x.HotelId,
+			x => (Avg: x.AvgRating, Count: x.Count)
+		);
+
+
 		var results = new List<HotelSearchItemResponse>();
-        var tagsLookup = await _context.Set<HotelTag>()
-            .Include(ht => ht.Tag)
-            .Where(ht => hotels.Select(h => h.Id).Contains(ht.HotelId))
-            .GroupBy(ht => ht.HotelId)
-            .ToDictionaryAsync(g => g.Key, g => g.Select(x => new TagResponse { Id = x.TagId, Name = x.Tag.Name }).ToList());
+		var tagsLookup = await _context.Set<HotelTag>()
+			.Include(ht => ht.Tag)
+			.Where(ht => hotels.Select(h => h.Id).Contains(ht.HotelId))
+			.GroupBy(ht => ht.HotelId)
+			.ToDictionaryAsync(g => g.Key, g => g.Select(x => new TagResponse { Id = x.TagId, Name = x.Tag.Name }).ToList());
 		foreach (var h in hotels)
 		{
 			var types = hotelIdToRoomTypes.TryGetValue(h.Id, out var list) ? list : new List<RoomType>();
@@ -165,6 +201,14 @@ public sealed class HotelService
 				}
 			}
 
+			double rating = 0;
+			int reviewCount = 0;
+			if (ratingLookup.TryGetValue(h.Id, out var stats))
+			{
+				rating = stats.Avg;
+				reviewCount = stats.Count;
+			}
+
 
 			var item = new HotelSearchItemResponse
 			{
@@ -172,10 +216,11 @@ public sealed class HotelService
 				Name = h.Name,
 				City = h.City.Name,
 				FromPrice = fromPrice,
-				Rating = (double)h.Rating,
+				Rating = rating,
+				ReviewCount = reviewCount,
 				ThumbnailUrl = h.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault() ?? string.Empty,
 				HasAvailability = hasAvailability,
-                Tags = tagsLookup.TryGetValue(h.Id, out var t) ? t : new List<TagResponse>()
+				Tags = tagsLookup.TryGetValue(h.Id, out var t) ? t : new List<TagResponse>()
 			};
 			results.Add(item);
 		}
@@ -218,12 +263,12 @@ public sealed class HotelService
 
 		var eligibleTypes = types.Where(rt => rt.Capacity >= requestedGuests).ToList();
 
-        // Tags for this hotel
-        var tags = await _context.Set<HotelTag>()
-            .Include(ht => ht.Tag)
-            .Where(ht => ht.HotelId == hotel.Id)
-            .Select(ht => new TagResponse { Id = ht.TagId, Name = ht.Tag.Name })
-            .ToListAsync();
+		// Tags for this hotel
+		var tags = await _context.Set<HotelTag>()
+			.Include(ht => ht.Tag)
+			.Where(ht => ht.HotelId == hotel.Id)
+			.Select(ht => new TagResponse { Id = ht.TagId, Name = ht.Tag.Name })
+			.ToListAsync();
 
 		List<RoomRate> rates = new();
 		if (eligibleTypes.Count > 0)
@@ -297,11 +342,11 @@ public sealed class HotelService
 		}
 
 		result.AvailableRoomTypes = details;
-        result.Tags = tags;
+		result.Tags = tags;
 		return result;
-    }
+	}
 
-	public async Task<PagedResult<HotelSearchItemResponse>> GetHotDealsAsync(int page = 1, int pageSize = 20, CancellationToken ct = default)
+	public async Task<PagedResult<HotelSearchItemResponse>> GetHotDealsAsync(int page = 0, int pageSize = 20, CancellationToken ct = default)
 	{
 		var today = DateTime.UtcNow.Date;
 		var soon = today.AddDays(30);
@@ -332,16 +377,44 @@ public sealed class HotelService
 
 		var groupedRoomTypes = roomTypes.GroupBy(rt => rt.HotelId).ToDictionary(g => g.Key, g => g.ToList());
 
-        var tagsLookup = await _context.Set<HotelTag>()
-            .Include(ht => ht.Tag)
-            .Where(ht => hotelIds.Contains(ht.HotelId))
-            .GroupBy(ht => ht.HotelId)
-            .ToDictionaryAsync(g => g.Key, g => g.Select(x => new TagResponse { Id = x.TagId, Name = x.Tag.Name }).ToList(), ct);
+		var tagsLookup = await _context.Set<HotelTag>()
+			.Include(ht => ht.Tag)
+			.Where(ht => hotelIds.Contains(ht.HotelId))
+			.GroupBy(ht => ht.HotelId)
+			.ToDictionaryAsync(g => g.Key, g => g.Select(x => new TagResponse { Id = x.TagId, Name = x.Tag.Name }).ToList(), ct);
+
+
+
+		var ratingStats = await _context.Set<Review>()
+			.Where(r => hotelIds.Contains(r.HotelId))
+			.GroupBy(r => r.HotelId)
+			.Select(g => new
+			{
+				HotelId = g.Key,
+				AvgRating = g.Average(r => r.Rating),
+				Count = g.Count()
+			})
+			.ToListAsync(ct);
+
+		var ratingLookup = ratingStats.ToDictionary(
+			x => x.HotelId,
+			x => (Avg: x.AvgRating, Count: x.Count)
+		);
+
 
 		var items = hotels.Select(h =>
 		{
 			var types = groupedRoomTypes.TryGetValue(h.Id, out var list) ? list : new List<RoomType>();
 			var fromPrice = types.Count > 0 ? types.Min(rt => rt.BasePrice) : 0m;
+
+			double rating = 0;
+			int reviewCount = 0;
+			if (ratingLookup.TryGetValue(h.Id, out var stats))
+			{
+				rating = stats.Avg;
+				reviewCount = stats.Count;
+			}
+
 
 			return new HotelSearchItemResponse
 			{
@@ -349,10 +422,11 @@ public sealed class HotelService
 				Name = h.Name,
 				City = h.City.Name,
 				FromPrice = fromPrice,
-				Rating = (double)h.Rating,
+				Rating = rating,
+				ReviewCount = reviewCount,
 				ThumbnailUrl = h.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault() ?? string.Empty,
 				HasAvailability = true,
-                Tags = tagsLookup.TryGetValue(h.Id, out var t) ? t : new List<TagResponse>()
+				Tags = tagsLookup.TryGetValue(h.Id, out var t) ? t : new List<TagResponse>()
 			};
 		}).ToList();
 

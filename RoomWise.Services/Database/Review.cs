@@ -11,6 +11,9 @@ public class Review
     [ForeignKey(nameof(Hotel))]
     public int HotelId { get; set; }
 
+    [ForeignKey(nameof(Reservation))]
+    public int ReservationId { get; set; }
+
     [ForeignKey(nameof(User))]
     public string UserId { get; set; } = null!;
 
@@ -26,5 +29,7 @@ public class Review
     public DateTime CreatedAt { get; set; }
 
     public virtual Hotel Hotel { get; set; } = null!;
+
+    public virtual Reservation Reservation { get; set; } = null!;
     public virtual AppUser? User { get; set; }
 }

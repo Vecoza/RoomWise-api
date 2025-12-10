@@ -10,5 +10,5 @@ public interface IHotelService
 {
     Task<PagedResult<HotelSearchItemResponse>> SearchAsync(HotelSearchObject search);
     Task<HotelDetailsResponse?> GetDetailsAsync(int id, DateTime? checkIn, DateTime? checkOut, int? guests);
-    Task<PagedResult<HotelSearchItemResponse>> GetHotDealsAsync(int page = 1, int pageSize = 20, CancellationToken ct = default);
+    Task<PagedResult<HotelSearchItemResponse>> GetHotDealsAsync(int page = 0, int pageSize = 20, CancellationToken ct = default);
 }

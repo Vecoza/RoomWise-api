@@ -8,7 +8,8 @@ namespace RoomWise.Services.Interface
     public interface IReservationService
         : ICRUDService<ReservationResponse, ReservationSearchObject, ReservationUpsertRequest, ReservationUpsertRequest>
     {
-        Task<bool> CancelAsync(Guid publicId, string requestedByUserId);
+        Task CancelAsync(int id, CancellationToken ct);
+
         Task<PagedResult<ReservationResponse>> GetMyAsync(string userId, string? category);
 
 

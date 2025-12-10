@@ -25,7 +25,7 @@ public sealed class LoyaltyController : ControllerBase
     }
 
     [HttpGet("history")]
-    public async Task<ActionResult<PagedResult<LoyaltyPointResponse>>> History([FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default)
+    public async Task<ActionResult<PagedResult<LoyaltyPointResponse>>> History([FromQuery] int page = 0, [FromQuery] int pageSize = 20, CancellationToken ct = default)
     {
         var uid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
         if (string.IsNullOrWhiteSpace(uid)) return Forbid();

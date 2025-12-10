@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RoomWise.Api.Data;
@@ -11,9 +12,11 @@ using RoomWise.Api.Data;
 namespace RoomWise.Api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20251209130729_AddReservationIdToReview")]
+    partial class AddReservationIdToReview
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -876,13 +879,14 @@ namespace RoomWise.Api.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ReservationId");
+
                     b.HasIndex("UserId");
 
                     b.HasIndex("HotelId", "CreatedAt");
 
-                    b.HasIndex("ReservationId", "UserId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_Reviews_ReservationId_UserId");
+                    b.HasIndex("HotelId", "UserId")
+                        .IsUnique();
 
                     b.ToTable("Reviews");
                 });
@@ -1058,7 +1062,8 @@ namespace RoomWise.Api.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("AvatarUrl")
-                        .HasColumnType("text");
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()

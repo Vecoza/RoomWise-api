@@ -21,8 +21,8 @@ public sealed class SearchController : ControllerBase
             return BadRequest("checkIn and checkOut are required.");
         if (req.Guests < 1)
             return BadRequest("guests must be >= 1.");
-        
-        if (req.Page <= 0) req.Page = 1;
+
+        if (req.Page <= 0) req.Page = 0;
         if (req.PageSize <= 0 || req.PageSize > 100) req.PageSize = 20;
 
         var result = await _search.SearchHotelsAsync(req, ct);

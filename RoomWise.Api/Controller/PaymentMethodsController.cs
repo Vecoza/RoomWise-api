@@ -35,7 +35,7 @@ public sealed class PaymentMethodsController : ControllerBase
     // GET /api/me/payment-methods?page=1&pageSize=20
     [HttpGet]
     public async Task<ActionResult<PagedResult<PaymentMethodResponse>>> List(
-        [FromQuery] int page = 1,
+        [FromQuery] int page = 0,
         [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
     {

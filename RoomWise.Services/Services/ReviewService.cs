@@ -31,7 +31,6 @@ public class ReviewService
                 (x.Body != null && EF.Functions.ILike(x.Body, $"%{s.FTS}%")));
         return q.OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.Id);
     }
-
     protected override async Task BeforeInsert(Review entity, ReviewUpsertRequest req)
     {
         if (string.IsNullOrWhiteSpace(req.UserId))
@@ -39,23 +38,28 @@ public class ReviewService
 
         var today = DateTime.UtcNow.Date;
 
-        var hasStayed = await _ctx.Set<Reservation>()
-            .AnyAsync(r =>
+        // 1) Check that this reservation belongs to this user and hotel, and is finished
+        var reservation = await _ctx.Set<Reservation>()
+            .FirstOrDefaultAsync(r =>
+                r.Id == req.ReservationId &&
                 r.UserId == req.UserId &&
                 r.HotelId == req.HotelId &&
                 (r.Status == "Confirmed" || r.Status == "Completed") &&
                 r.CheckOut.Date <= today);
 
-        if (!hasStayed)
+        if (reservation is null)
             throw new InvalidOperationException("You can review this hotel only after a completed stay.");
 
+        // 2) Allow only one review per reservation per user
         var already = await _ctx.Set<Review>()
-            .AnyAsync(r => r.HotelId == req.HotelId && r.UserId == req.UserId);
+            .AnyAsync(r => r.ReservationId == req.ReservationId && r.UserId == req.UserId);
 
         if (already)
-            throw new InvalidOperationException("You have already reviewed this hotel.");
+            throw new InvalidOperationException("You have already reviewed this stay.");
 
         entity.UserId = req.UserId!;
+        entity.HotelId = req.HotelId;
+        entity.ReservationId = req.ReservationId;
         entity.CreatedAt = DateTime.UtcNow;
     }
 

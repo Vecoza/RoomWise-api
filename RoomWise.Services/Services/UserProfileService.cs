@@ -1,4 +1,3 @@
-
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using RoomWise.Model;
@@ -15,18 +14,37 @@ public class UserProfileService : IUserProfileService
 
     public UserProfileService(DbContext db, IMapper mapper)
     {
-        _db = db; _mapper = mapper;
+        _db = db;
+        _mapper = mapper;
     }
 
     public async Task<UserProfileResponse?> GetMineAsync(string userId, CancellationToken ct = default)
     {
-        var entity = await _db.Set<UserProfile>().FirstOrDefaultAsync(p => p.UserId == userId, ct);
+        var entity = await _db.Set<UserProfile>()
+                              .FirstOrDefaultAsync(p => p.UserId == userId, ct);
+
         return entity is null ? null : _mapper.Map<UserProfileResponse>(entity);
     }
 
-    public async Task<UserProfileResponse> UpsertMineAsync(string userId, UserProfileUpsertRequest req, CancellationToken ct = default)
+    public async Task<UserProfileResponse> UpsertMineAsync(
+        string userId,
+        UserProfileUpsertRequest req,
+        CancellationToken ct = default)
     {
-        var entity = await _db.Set<UserProfile>().FirstOrDefaultAsync(p => p.UserId == userId, ct);
+        // ✅ 1) Make sure the identity user actually exists
+        var userExists = await _db.Set<AppUser>()
+                                  .AnyAsync(u => u.Id == userId, ct);
+
+        if (!userExists)
+        {
+            // This avoids FK violations on UserProfiles.UserId
+            throw new InvalidOperationException(
+                $"Cannot create or update profile. User '{userId}' does not exist.");
+        }
+
+        // ✅ 2) Normal upsert logic
+        var entity = await _db.Set<UserProfile>()
+                              .FirstOrDefaultAsync(p => p.UserId == userId, ct);
 
         if (entity is null)
         {
@@ -34,21 +52,22 @@ public class UserProfileService : IUserProfileService
             {
                 UserId = userId,
                 FirstName = req.FirstName,
-                LastName  = req.LastName,
-                Phone     = req.Phone,
+                LastName = req.LastName,
+                Phone = req.Phone,
                 AvatarUrl = req.AvatarUrl,
                 PreferredLanguage = req.PreferredLanguage,
                 LoyaltyBalance = 0,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
+
             _db.Set<UserProfile>().Add(entity);
         }
         else
         {
             entity.FirstName = req.FirstName;
-            entity.LastName  = req.LastName;
-            entity.Phone     = req.Phone;
+            entity.LastName = req.LastName;
+            entity.Phone = req.Phone;
             entity.AvatarUrl = req.AvatarUrl;
             entity.PreferredLanguage = req.PreferredLanguage;
             entity.UpdatedAt = DateTime.UtcNow;
@@ -57,4 +76,46 @@ public class UserProfileService : IUserProfileService
         await _db.SaveChangesAsync(ct);
         return _mapper.Map<UserProfileResponse>(entity);
     }
+
+
+    public async Task<UserProfileResponse> SetAvatarAsync(
+    string userId,
+    string avatarBase64,
+    CancellationToken ct)
+    {
+        var profile = await _db.Set<UserProfile>()
+            .FirstOrDefaultAsync(x => x.UserId == userId, ct);
+
+        if (profile == null)
+        {
+            profile = new UserProfile
+            {
+                UserId = userId,
+                FirstName = "",
+                LastName = "",
+                CreatedAt = DateTime.UtcNow
+            };
+            _db.Set<UserProfile>().Add(profile);
+        }
+
+
+        profile.AvatarUrl = avatarBase64;
+        profile.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync(ct);
+
+        return new UserProfileResponse
+        {
+            UserId = profile.UserId,
+            FirstName = profile.FirstName,
+            LastName = profile.LastName,
+            Phone = profile.Phone,
+            PreferredLanguage = profile.PreferredLanguage,
+            AvatarUrl = profile.AvatarUrl,
+            LoyaltyBalance = profile.LoyaltyBalance,
+            CreatedAt = profile.CreatedAt,
+            UpdatedAt = profile.UpdatedAt
+        };
+    }
+
 }

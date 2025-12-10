@@ -40,17 +40,27 @@ public class ReservationsController
     }
 
 
-    [HttpPost("{id:guid}/cancel")]
-    public async Task<IActionResult> Cancel(Guid id)
-    {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
-        if (string.IsNullOrWhiteSpace(userId))
-            return Forbid();
+    // [HttpPost("{id:guid}/cancel")]
+    // public async Task<IActionResult> Cancel(Guid id)
+    // {
+    //     var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+    //     if (string.IsNullOrWhiteSpace(userId))
+    //         return Forbid();
 
-        var result = await _reservations.CancelAsync(id, userId);
-        if (!result) return NotFound();
+    //     var result = await _reservations.CancelAsync(id, userId);
+    //     if (!result) return NotFound();
+    //     return NoContent();
+    // }
+
+    // POST /api/reservations/123/cancel
+    // API route (expects int)
+    [HttpPost("{id:int}/cancel")]
+    public async Task<IActionResult> Cancel(int id, CancellationToken ct)
+    {
+        await _reservations.CancelAsync(id, ct);
         return NoContent();
     }
+
 
 
     [HttpPost("with-payment-intent")]

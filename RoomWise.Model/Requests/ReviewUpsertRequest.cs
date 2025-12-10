@@ -6,7 +6,10 @@ public class ReviewUpsertRequest
 {
     [Required] public int HotelId { get; set; }
 
-    [Required, Range(1,5)]
+
+    [Required] public int ReservationId { get; set; }
+
+    [Required, Range(1, 5)]
     public short Rating { get; set; } // 1-5
 
     [MaxLength(120)]
@@ -14,6 +17,6 @@ public class ReviewUpsertRequest
 
     public string? Body { get; set; }
 
-    
+
     public string? UserId { get; set; }
 }

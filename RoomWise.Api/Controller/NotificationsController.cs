@@ -35,7 +35,7 @@ public sealed class NotificationsController : ControllerBase
     // GET /api/me/notifications?page=1&pageSize=20
     [HttpGet]
     public async Task<ActionResult<PagedResult<NotificationResponse>>> List(
-        [FromQuery] int page = 1,
+        [FromQuery] int page = 0,
         [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
     {

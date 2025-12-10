@@ -229,6 +229,8 @@ await app.SeedLocationDataAsync();
 
 await app.SeedDemoDataAsync();
 
+app.UseStaticFiles();
+
 
 app.UseCors("Default");
 app.UseAuthentication();

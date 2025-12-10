@@ -265,24 +265,39 @@ public sealed class ReservationService
     }
 
 
-    public async Task<bool> CancelAsync(Guid publicId, string requestedByUserId)
+    public async Task CancelAsync(int id, CancellationToken ct)
     {
-        var reservation = await _context.Set<Reservation>()
-            .FirstOrDefaultAsync(r => r.PublicId == publicId);
+        var userId = _httpContextAccessor.HttpContext?
+        .User
+        .FindFirstValue(ClaimTypes.NameIdentifier);
 
-        if (reservation is null) return false;
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new InvalidOperationException("Authenticated user id not found.");
+
+        var reservation = await _context.Set<Reservation>()
+            .FirstOrDefaultAsync(r => r.Id == id, ct);
+
+        if (reservation is null)
+            throw new KeyNotFoundException($"Reservation {id} not found.");
 
         // Ownership check
-        if (!string.Equals(reservation.UserId, requestedByUserId, StringComparison.OrdinalIgnoreCase))
-            return false;
+        if (!string.Equals(reservation.UserId, userId, StringComparison.OrdinalIgnoreCase))
+            throw new UnauthorizedAccessException("You do not own this reservation.");
 
-        if (reservation.Status == "Cancelled") return true;
-        if (reservation.Status == "Completed") return false;
-        if (reservation.Status != "Pending" && reservation.Status != "Confirmed") return false;
+        if (reservation.Status == "Cancelled")
+            return;
+
+        if (reservation.Status == "Completed")
+            throw new InvalidOperationException("Completed reservation cannot be cancelled.");
+
+        if (reservation.Status != "Pending" && reservation.Status != "Confirmed")
+            throw new InvalidOperationException("Reservation cannot be cancelled in its current status.");
+
         // Must cancel at least 24 hours before check-in
-        if (DateTime.UtcNow >= reservation.CheckIn.AddDays(-1)) return false;
+        if (DateTime.UtcNow >= reservation.CheckIn.AddDays(-1))
+            throw new InvalidOperationException("Reservation can only be cancelled at least 24 hours before check-in.");
 
-        using var tx = await _context.Database.BeginTransactionAsync();
+        using var tx = await _context.Database.BeginTransactionAsync(ct);
 
         reservation.Status = "Cancelled";
         reservation.CancelledAt = DateTime.UtcNow;
@@ -296,8 +311,8 @@ public sealed class ReservationService
                 reservation.CheckOut.Date);
         }
 
-        await _context.SaveChangesAsync();
-        await tx.CommitAsync();
+        await _context.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
 
         try
         {
@@ -314,10 +329,8 @@ public sealed class ReservationService
         }
         catch
         {
-            // ignore
+            // ignore notification failures
         }
-
-        return true;
     }
 
 
@@ -417,4 +430,33 @@ public sealed class ReservationService
         var resp = _mapper.Map<PaymentResponse>(payment);
         return (resp, string.Empty);
     }
+
+    protected override ReservationResponse MapToResponse(Reservation entity)
+    {
+        var resp = base.MapToResponse(entity);
+
+        resp.HotelName = entity.Hotel?.Name ?? resp.HotelName;
+        resp.City = entity.Hotel?.City?.Name ?? resp.City;
+        resp.ThumbnailUrl = entity.Hotel?.Images?
+            .OrderBy(i => i.SortOrder)
+            .Select(i => i.Url)
+            .FirstOrDefault() ?? resp.ThumbnailUrl;
+
+        var userId = _httpContextAccessor.HttpContext?
+            .User
+            .FindFirstValue(ClaimTypes.NameIdentifier);
+
+        var reviews = _context.Set<RoomWise.Model.Review>().AsNoTracking();
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            resp.HasReview = reviews.Any(rv => rv.ReservationId == entity.Id && rv.UserId == userId);
+        }
+        else
+        {
+            resp.HasReview = reviews.Any(rv => rv.ReservationId == entity.Id);
+        }
+
+        return resp;
+    }
+
 }

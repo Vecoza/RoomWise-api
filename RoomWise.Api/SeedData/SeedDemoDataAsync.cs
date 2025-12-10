@@ -387,8 +387,8 @@ END$$;";
         {
             var wifi = new Facility { Id = 1, Code = "wifi", Name = "Free Wi-Fi" };
             var pool = new Facility { Id = 2, Code = "pool", Name = "Pool" };
-            var spa  = new Facility { Id = 3, Code = "spa",  Name = "Spa" };
-            var gym  = new Facility { Id = 4, Code = "gym",  Name = "Gym" };
+            var spa = new Facility { Id = 3, Code = "spa", Name = "Spa" };
+            var gym = new Facility { Id = 4, Code = "gym", Name = "Gym" };
             var parking = new Facility { Id = 5, Code = "parking", Name = "Parking" };
             ctx.Facilities.AddRange(wifi, pool, spa, gym, parking);
             await ctx.SaveChangesAsync();
@@ -415,7 +415,7 @@ END$$;";
         if (!await ctx.RoomAvailabilities.AnyAsync())
         {
             var start = new DateTime(2025, 11, 1);
-            var end   = new DateTime(2025, 12, 31);
+            var end = new DateTime(2025, 12, 31);
 
             var roomTypesSeed = await ctx.RoomTypes.AsNoTracking().Select(rt => new { rt.Id, rt.Stock }).ToListAsync();
             var rows = new List<RoomAvailability>();
@@ -484,10 +484,10 @@ END$$;";
         if (!await ctx.Tags.AnyAsync())
         {
             var tagBusiness = new Tag { Id = 1, Name = "Business" };
-            var tagFamily   = new Tag { Id = 2, Name = "Family" };
-            var tagSpa      = new Tag { Id = 3, Name = "Spa" };
-            var tagBeach    = new Tag { Id = 4, Name = "Beach" };
-            var tagSki      = new Tag { Id = 5, Name = "Ski" };
+            var tagFamily = new Tag { Id = 2, Name = "Family" };
+            var tagSpa = new Tag { Id = 3, Name = "Spa" };
+            var tagBeach = new Tag { Id = 4, Name = "Beach" };
+            var tagSki = new Tag { Id = 5, Name = "Ski" };
 
             ctx.Tags.AddRange(tagBusiness, tagFamily, tagSpa, tagBeach, tagSki);
             await ctx.SaveChangesAsync();
@@ -513,84 +513,84 @@ END$$;";
                 {
                     Id = 1,
                     HotelId = 1,
-                    Url = "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2c/b0/c1/4c/boutique-hotels.jpg?w=1200&h=-1&s=1",
+                    Url = "https://www.dangleterre.com/uploads/media/1200x630/00/370-_DSF2441_SAM_WS2_aRGB_High-1600px.jpg?v=1-0",
                     SortOrder = 1
                 },
                 new HotelImage
                 {
                     Id = 2,
                     HotelId = 1,
-                    Url = "https://media.cntraveler.com/photos/685595770556b60be007dced/16:9/w_2864,h_1611,c_limit/062325-Best-Hotels-LA-W-Hollywood-PR_MG_2125-2-copy.jpg",
+                    Url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRB6qCEHozSkz53GtEubo8U17Ao2rmmHzClGw&s",
                     SortOrder = 2
                 },
                 new HotelImage
                 {
                     Id = 3,
-                    HotelId = 2,
-                    Url = "https://miro.medium.com/v2/1*V-1_xLadALuv6ueJsO3o_A.jpeg",
-                    SortOrder = 1
+                    HotelId = 1,
+                    Url = "https://cf.bstatic.com/xdata/images/hotel/max1024x768/241307603.jpg?k=93aba2b8c4909e90cb6e5e55ff1676dd6a944139423ba99e0ad32cb589606f28&o=",
+                    SortOrder = 3
                 },
                 new HotelImage
                 {
                     Id = 4,
                     HotelId = 2,
-                    Url = "https://images.unsplash.com/photo-1501117716987-c8e1ecb210af",
-                    SortOrder = 2
+                    Url = "https://m.ahstatic.com/is/image/accorhotels/HCM_P_8147067:4by3?fmt=jpg&op_usm=1.75,0.3,2,0&resMode=sharp2&iccEmbed=true&icc=sRGB&dpr=on,1.5&wid=335&hei=251&qlt=80",
+                    SortOrder = 1
                 },
                 new HotelImage
                 {
                     Id = 5,
-                    HotelId = 1,
-                    Url = "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
-                    SortOrder = 3
+                    HotelId = 2,
+                    Url = "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/21/89/11/15/hotel-facade.jpg?w=900&h=500&s=1",
+                    SortOrder = 2
                 },
                 new HotelImage
                 {
                     Id = 6,
-                    HotelId = 1,
-                    Url = "https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb",
-                    SortOrder = 4
+                    HotelId = 2,
+                    Url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSDrupvySWTfYQhppPRES2xRt-GZQhZbZf1jw&s",
+                    SortOrder = 3
                 },
                 new HotelImage
                 {
                     Id = 7,
                     HotelId = 3,
-                    Url = "https://images.unsplash.com/photo-1528909514045-2fa4ac7a08ba",
+                    Url = "https://www.luxuryabode.com/mona/img/hotels.jpg",
                     SortOrder = 1
                 },
                 new HotelImage
                 {
                     Id = 8,
                     HotelId = 3,
-                    Url = "https://images.unsplash.com/photo-1507652955-f3dcef5a3be5",
+                    Url = "https://www.luxuryabode.com/mona/img/hotels.jpg",
                     SortOrder = 2
                 },
                 new HotelImage
                 {
                     Id = 9,
                     HotelId = 3,
-                    Url = "https://images.unsplash.com/photo-1505691938895-1758d7feb511",
+                    Url = "https://cache.marriott.com/content/dam/marriott-digital/rz/emea/hws/b/bcnrz/en_us/photo/unlimited/assets/50514355-arts-hotel-april-2018-02.png",
                     SortOrder = 3
                 },
                 new HotelImage
                 {
                     Id = 10,
                     HotelId = 4,
-                    Url = "https://images.unsplash.com/photo-1496417263034-38ec4f0b665a",
+                    Url = "https://cache.marriott.com/content/dam/marriott-digital/rz/emea/hws/b/bcnrz/en_us/photo/unlimited/assets/50514355-arts-hotel-april-2018-02.png",
                     SortOrder = 1
                 },
                 new HotelImage
                 {
                     Id = 11,
                     HotelId = 4,
-                    Url = "https://images.unsplash.com/photo-1521783988139-89396b1d92a9",
+                    Url = "https://files.selar.co/product-images/2024/products/tidaconsulting/hotel-financial-model-selar.co-6644d050ec39f.jpeg",
                     SortOrder = 2
                 },
                 new HotelImage
                 {
                     Id = 12,
                     HotelId = 4,
-                    Url = "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
+                    Url = "https://files.selar.co/product-images/2024/products/tidaconsulting/hotel-financial-model-selar.co-6644d050ec39f.jpeg",
                     SortOrder = 3
                 }
             );
@@ -637,26 +637,7 @@ END$$;";
             await ResetIdentityAsync("Wishlists");
         }
 
-        // 11) REVIEWS
-        if (!await ctx.Reviews.AnyAsync())
-        {
-            ctx.Reviews.Add(
-                new Review
-                {
-                    Id = 1,
-                    HotelId = 1,
-                    UserId = demoUserId,
-                    Rating = 5,
-                    Title = "Great stay!",
-                    Body = "Perfect location and friendly staff.",
-                    CreatedAt = DateTime.UtcNow.AddDays(-3)
-                }
-            );
-            await ctx.SaveChangesAsync();
-            await ResetIdentityAsync("Reviews");
-        }
-
-        // 12) DEMO RESERVATIONS (for statistics etc.)
+        // 11) DEMO RESERVATIONS (for statistics etc.)
         if (!await ctx.Reservations.AnyAsync())
         {
             var reservations = new List<Reservation>
@@ -799,6 +780,58 @@ END$$;";
 
             ctx.Reservations.AddRange(reservations);
             await ctx.SaveChangesAsync();
+
+            // 11a) REVIEWS (after reservations so we have ReservationId FK)
+            if (!await ctx.Reviews.AnyAsync())
+            {
+                var byHotel = reservations.GroupBy(r => r.HotelId)
+                    .ToDictionary(g => g.Key, g => g.First().Id);
+
+                ctx.Reviews.AddRange(
+                    new Review
+                    {
+                        HotelId = 1,
+                        ReservationId = byHotel[1],
+                        UserId = demoUserId,
+                        Rating = 5,
+                        Title = "Great stay!",
+                        Body = "Perfect location and friendly staff.",
+                        CreatedAt = DateTime.UtcNow.AddDays(-3)
+                    },
+                    new Review
+                    {
+                        HotelId = 2,
+                        ReservationId = byHotel[2],
+                        UserId = demoUserId,
+                        Rating = 4,
+                        Title = "Nice riverside spot",
+                        Body = "Loved the view of the river, staff was helpful.",
+                        CreatedAt = DateTime.UtcNow.AddDays(-5)
+                    },
+                    new Review
+                    {
+                        HotelId = 3,
+                        ReservationId = byHotel[3],
+                        UserId = demoUserId,
+                        Rating = 5,
+                        Title = "Beach vibes",
+                        Body = "Perfect for a beach weekend; would come back.",
+                        CreatedAt = DateTime.UtcNow.AddDays(-7)
+                    },
+                    new Review
+                    {
+                        HotelId = 4,
+                        ReservationId = byHotel[4],
+                        UserId = demoUserId,
+                        Rating = 4,
+                        Title = "Great for skiing",
+                        Body = "Cozy lodge, easy access to the slopes.",
+                        CreatedAt = DateTime.UtcNow.AddDays(-12)
+                    }
+                );
+                await ctx.SaveChangesAsync();
+                await ResetIdentityAsync("Reviews");
+            }
 
             // 12a) RESERVATION ADD-ONS
             var resList = reservations.ToList();
