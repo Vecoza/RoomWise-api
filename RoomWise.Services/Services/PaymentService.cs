@@ -31,7 +31,7 @@ public class PaymentService
         _loyalty = loyalty;
         _notifications = notifications;
 
-       
+
         _piService = new PaymentIntentService();
     }
 
@@ -62,10 +62,65 @@ public class PaymentService
         if (baseAmount <= 0)
             throw new InvalidOperationException("Payment amount must be greater than zero.");
 
-        var redeemPoints = Math.Max(0, request.LoyaltyPointsToRedeem ?? 0);
-        var amount = baseAmount - Math.Min(baseAmount, redeemPoints);
+        var balance = await _loyalty.GetBalanceAsync(reservation.UserId);
+        var requestedRedeem = Math.Max(0, request.LoyaltyPointsToRedeem ?? 0);
+        var redeemPoints = Math.Min(requestedRedeem, balance);
+        // cap redemption so we don't exceed the reservation amount
+        redeemPoints = (int)Math.Min(redeemPoints, Math.Floor(baseAmount));
+
+        var amount = baseAmount - redeemPoints;
         if (amount <= 0)
-            throw new InvalidOperationException("Payment amount must be greater than zero after applying loyalty points.");
+        {
+            // Fully covered by loyalty: no Stripe PaymentIntent needed
+            var loyaltyPayment = new Payment
+            {
+                ReservationId = reservation.Id,
+                Amount = 0,
+                Currency = currency.ToUpperInvariant(),
+                Provider = "Loyalty",
+                Status = "Succeeded",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Set<Payment>().Add(loyaltyPayment);
+            await _context.SaveChangesAsync();
+
+            if (redeemPoints > 0)
+            {
+                await _loyalty.AddAsync(
+                    userId: reservation.UserId,
+                    delta: -redeemPoints,
+                    reason: $"Redeem {redeemPoints} points for reservation {reservation.Id}",
+                    reservationId: reservation.Id);
+            }
+
+            if (reservation.Status is "Pending" or "RequiresAction")
+            {
+                reservation.Status = "Confirmed";
+                await _context.SaveChangesAsync();
+            }
+
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(reservation.UserId))
+                {
+                    await _notifications.CreateAsync(new NotificationCreateRequest
+                    {
+                        UserId = reservation.UserId,
+                        ReservationId = reservation.Id,
+                        Type = "payment_succeeded",
+                        Message =
+                            $"Payment covered by loyalty points. Reservation {reservation.ConfirmationNumber} is confirmed."
+                    });
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
+            return (MapToResponse(loyaltyPayment), string.Empty);
+        }
 
 
         PaymentMethodEntity? savedMethod = null;
@@ -80,42 +135,42 @@ public class PaymentService
                 throw new InvalidOperationException("Saved payment method not found for this user.");
         }
 
-        var payment = new Payment
+        var paymentEntity = new Payment
         {
             ReservationId = reservation.Id,
-            Amount        = amount,
-            Currency      = currency.ToUpperInvariant(),
-            Provider      = "Stripe",
-            Status        = NormalizeStatus("requires_payment_method"),
-            CreatedAt     = DateTime.UtcNow
+            Amount = amount,
+            Currency = currency.ToUpperInvariant(),
+            Provider = "Stripe",
+            Status = NormalizeStatus("requires_payment_method"),
+            CreatedAt = DateTime.UtcNow
         };
 
-        _context.Set<Payment>().Add(payment);
+        _context.Set<Payment>().Add(paymentEntity);
         await _context.SaveChangesAsync();
 
         var options = new PaymentIntentCreateOptions
         {
-            Amount   = (long)Math.Round(amount * 100m, MidpointRounding.AwayFromZero),
+            Amount = (long)Math.Round(amount * 100m, MidpointRounding.AwayFromZero),
             Currency = currency,
             AutomaticPaymentMethods = savedMethod is null
-                ? new PaymentIntentAutomaticPaymentMethodsOptions { Enabled = true }
-                : null,
+            ? new PaymentIntentAutomaticPaymentMethodsOptions { Enabled = true }
+            : null,
             PaymentMethod = savedMethod?.StripePaymentMethodId,
             Metadata = new Dictionary<string, string>
             {
-                ["paymentId"]     = payment.Id.ToString(),
+                ["paymentId"] = paymentEntity.Id.ToString(),
                 ["reservationId"] = reservation.Id.ToString(),
-                ["redeemPoints"]  = redeemPoints.ToString()
+                ["redeemPoints"] = redeemPoints.ToString()
             }
         };
 
         var pi = await _piService.CreateAsync(options);
 
-        payment.PaymentIntentId = pi.Id;
-        payment.Status = NormalizeStatus(pi.Status);
+        paymentEntity.PaymentIntentId = pi.Id;
+        paymentEntity.Status = NormalizeStatus(pi.Status);
         await _context.SaveChangesAsync();
 
-        return (MapToResponse(payment), pi.ClientSecret ?? string.Empty);
+        return (MapToResponse(paymentEntity), pi.ClientSecret ?? string.Empty);
     }
 
     public async Task HandleWebhookAsync(Event stripeEvent)
@@ -198,26 +253,16 @@ public class PaymentService
             await _context.SaveChangesAsync();
         }
 
-        var points = (int)Math.Floor(payment.Amount / 10m); // 1 point per 10 currency units charged
-        if (points > 0)
-        {
-            await _loyalty.AddAsync(
-                userId: reservation.UserId,
-                delta: points,
-                reason: $"Payment {payment.Id} {payment.Currency}",
-                reservationId: reservation.Id);
-        }
-
         try
         {
             if (!string.IsNullOrWhiteSpace(reservation.UserId))
             {
                 await _notifications.CreateAsync(new NotificationCreateRequest
                 {
-                    UserId        = reservation.UserId,
+                    UserId = reservation.UserId,
                     ReservationId = reservation.Id,
-                    Type          = "payment_succeeded",
-                    Message       =
+                    Type = "payment_succeeded",
+                    Message =
                         $"Payment {payment.Amount} {payment.Currency} succeeded. Reservation {reservation.ConfirmationNumber} is confirmed."
                 });
             }
@@ -233,12 +278,12 @@ public class PaymentService
         var normalized = status switch
         {
             "requires_payment_method" => "RequiresMethod",
-            "requires_confirmation"   => "RequiresConfirm",
-            "requires_action"         => "RequiresAction",
-            "processing"              => "Processing",
-            "canceled"                => "Canceled",
-            "succeeded"               => "Succeeded",
-            _                         => status
+            "requires_confirmation" => "RequiresConfirm",
+            "requires_action" => "RequiresAction",
+            "processing" => "Processing",
+            "canceled" => "Canceled",
+            "succeeded" => "Succeeded",
+            _ => status
         };
 
         return normalized.Length > StatusMaxLength

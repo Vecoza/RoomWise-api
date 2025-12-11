@@ -37,9 +37,9 @@ public class AddOnService
 
         var model = (req.PricingModel ?? "").Trim();
         if (!string.Equals(model, "PerNight", StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(model, "PerStay", StringComparison.OrdinalIgnoreCase))
-            throw new ArgumentException("PricingModel must be 'PerNight' or 'PerStay'.");
-
+            !string.Equals(model, "PerStay", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(model, "PerGuestPerNight", StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException("PricingModel must be 'PerNight', 'PerStay' or 'PerGuestPerNight'.");
         entity.PricingModel = model;
         entity.Currency = string.IsNullOrWhiteSpace(req.Currency)
             ? "EUR"

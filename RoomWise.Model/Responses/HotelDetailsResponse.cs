@@ -11,7 +11,9 @@ public class HotelDetailsResponse
 	public IEnumerable<string> Amenities { get; set; } = Array.Empty<string>();
 	public IEnumerable<string> Photos { get; set; } = Array.Empty<string>();
 	public IEnumerable<AvailableRoomType> AvailableRoomTypes { get; set; } = Array.Empty<AvailableRoomType>();
-    public IEnumerable<TagResponse> Tags { get; set; } = Array.Empty<TagResponse>();
+	public IEnumerable<TagResponse> Tags { get; set; } = Array.Empty<TagResponse>();
+
+	public List<AddOnResponse> AddOns { get; set; } = new();
 }
 
 public class AvailableRoomType
@@ -21,5 +23,10 @@ public class AvailableRoomType
 	public int Capacity { get; set; }
 	public decimal NightlyPrice { get; set; }
 	public int RoomsLeft { get; set; }
-}
 
+	// TEST
+	public string? ThumbnailUrl { get; set; }
+	public List<string> ImageUrls { get; set; } = new();
+	public string BedType { get; set; } = string.Empty;
+	public bool IsSmokingAllowed { get; set; }
+}

@@ -232,6 +232,43 @@ END$$;";
             await ResetIdentityAsync("RoomTypes");
         }
 
+        // 2a) ROOM TYPE IMAGES
+        if (!await ctx.RoomTypeImages.AnyAsync())
+        {
+            ctx.RoomTypeImages.AddRange(
+                        // Hotel 1 room types
+                        new RoomTypeImage { Id = 1, RoomTypeId = 1, Url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ0JxgI2qCHTsxA7QPfdfjYhu9rf6CT_-1mAA&s", SortOrder = 1 },
+                        new RoomTypeImage { Id = 2, RoomTypeId = 1, Url = "https://media.istockphoto.com/id/174767532/photo/hotel-room.jpg?s=612x612&w=0&k=20&c=2BCNeFcX5PGzCxfZKXewhI_y2C9R7Jw_tzVYCXmRRCE=", SortOrder = 2 },
+
+                        new RoomTypeImage { Id = 3, RoomTypeId = 2, Url = "https://t3.ftcdn.net/jpg/02/71/08/28/360_F_271082810_CtbTjpnOU3vx43ngAKqpCPUBx25udBrg.jpg", SortOrder = 1 },
+                        new RoomTypeImage { Id = 4, RoomTypeId = 2, Url = "https://media.istockphoto.com/id/627892060/photo/hotel-room-suite-with-view.jpg?s=612x612&w=0&k=20&c=YBwxnGH3MkOLLpBKCvWAD8F__T-ypznRUJ_N13Zb1cU=", SortOrder = 2 },
+
+                        // Hotel 2 room types
+                        new RoomTypeImage { Id = 5, RoomTypeId = 3, Url = "https://img.freepik.com/free-photo/small-hotel-room-interior-with-double-bed-bathroom_1262-12489.jpg?semt=ais_hybrid&w=740&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 6, RoomTypeId = 3, Url = "https://static01.nyt.com/images/2019/03/24/travel/24trending-shophotels1/24trending-shophotels1-superJumbo.jpg", SortOrder = 2 },
+
+                        new RoomTypeImage { Id = 7, RoomTypeId = 4, Url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSnHFyGj0c1K-Mk106ZGT-juvcp-4Z8aMocHw&s", SortOrder = 1 },
+                        new RoomTypeImage { Id = 8, RoomTypeId = 4, Url = "https://images.rawpixel.com/image_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTA1L3AtMzEyLXRlZDY2OTYtY2hpbS5qcGc.jpg", SortOrder = 2 },
+
+                        // Hotel 3 room types
+                        new RoomTypeImage { Id = 9, RoomTypeId = 5, Url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRgpTMKEwRIQFjkvBCLeSqtPXiFrQL5YYuCTQ&s", SortOrder = 1 },
+                        new RoomTypeImage { Id = 10, RoomTypeId = 5, Url = "https://cdn.prod.website-files.com/62b1b17308b0d74291186304/672f4fbfb3638bf1cc97ce0f_672f498462cbddaad472142e_double%2520room%2520hote%2527.png", SortOrder = 2 },
+
+                        new RoomTypeImage { Id = 11, RoomTypeId = 6, Url = "https://media.cnn.com/api/v1/images/stellar/prod/4b-mandarin-oriental-jumeira-dubai-the-royal-penthouse-bedroom.jpg?q=w_1110,c_fill", SortOrder = 1 },
+                        new RoomTypeImage { Id = 12, RoomTypeId = 6, Url = "https://watergatebay.co.uk/storage/media/2024/06/12/HgiQGx8sWe/lg-sea-view-suite-twin-baths.jpg", SortOrder = 2 },
+
+                        // Hotel 4 room types
+                        new RoomTypeImage { Id = 13, RoomTypeId = 7, Url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTggKCR1qXn8NtdAuB-yqg1wmKAAN-WLJvBJw&s", SortOrder = 1 },
+                        new RoomTypeImage { Id = 14, RoomTypeId = 7, Url = "https://symphony.cdn.tambourine.com/menger-hotel-redesign/media/menger-hotel-gallery-10-5d37218c27264.jpg", SortOrder = 2 },
+
+                        new RoomTypeImage { Id = 15, RoomTypeId = 8, Url = "https://www.millenniumhotels.com/mhb-media/new-destinations/eu-and-uk/united-kingdom/millennium-hotel-london-knightsbridge/rooms/kni---1280-x-568-signature.auto?rev=a31a67ec245542b2b93e9595b35f5df6", SortOrder = 1 },
+                        new RoomTypeImage { Id = 16, RoomTypeId = 8, Url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFG2pVGkRMV-Cqb4HAS1dS9RsFF3Ii-Tf2Xg&s", SortOrder = 2 }
+                    );
+
+            await ctx.SaveChangesAsync();
+            await ResetIdentityAsync("RoomTypeImages");
+        }
+
         // 3) ROOM RATES
         if (!await ctx.RoomRates.AnyAsync())
         {

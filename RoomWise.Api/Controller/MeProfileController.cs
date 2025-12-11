@@ -128,25 +128,21 @@ public sealed class MeProfileController : ControllerBase
         if (!file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
             return BadRequest(new { message = "Only image files are allowed." });
 
-        // Read the file into memory
+
         await using var ms = new MemoryStream();
         await file.CopyToAsync(ms, ct);
         var bytes = ms.ToArray();
 
-        // Convert to base64 string
+
         var base64 = Convert.ToBase64String(bytes);
 
-        // Optionally prefix with data URL schema (handy for web clients)
-        // var dataUrl = $"data:{file.ContentType};base64,{base64}";
-
-        // Save base64 into profile
         var profile = await _profiles.SetAvatarAsync(userId, base64, ct);
 
-        // Return base64 string to client
+
         return Ok(new
         {
             avatarBase64 = base64,
-            // also keep backward-compatible field name if you want:
+
             avatarUrl = base64
         });
     }

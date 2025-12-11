@@ -60,6 +60,12 @@ public sealed class ReservationService
 
     //InserAsync
     public override async Task<ReservationResponse> CreateAsync(ReservationUpsertRequest request)
+        => MapToResponse(await CreateReservationCoreAsync(request, sendNotification: true));
+
+    public async Task<ReservationResponse> CreateWithPaymentIntentAsync(ReservationUpsertRequest request)
+        => MapToResponse(await CreateReservationCoreAsync(request, sendNotification: false));
+
+    private async Task<Reservation> CreateReservationCoreAsync(ReservationUpsertRequest request, bool sendNotification)
     {
 
         var checkIn = request.CheckIn.Date;
@@ -95,6 +101,7 @@ public sealed class ReservationService
         // 2) Add-ons
         decimal addOnsTotal = 0m;
         var addOnItems = request.AddOns ?? new List<ReservationAddOnItem>();
+        Dictionary<int, AddOn> addOnById = new();
 
         if (addOnItems.Count > 0)
         {
@@ -104,7 +111,7 @@ public sealed class ReservationService
                 .Where(a => addOnIds.Contains(a.Id))
                 .ToListAsync();
 
-            var addOnById = addOns.ToDictionary(a => a.Id);
+            addOnById = addOns.ToDictionary(a => a.Id);
 
             foreach (var item in addOnItems)
             {
@@ -117,15 +124,7 @@ public sealed class ReservationService
                 if (item.Quantity <= 0)
                     throw new ArgumentException("Add-on quantity must be >= 1.");
 
-                decimal unitPrice;
-                decimal lineTotal;
-
-                var perNight = string.Equals(addOn.PricingModel, "PerNight", StringComparison.OrdinalIgnoreCase);
-
-                unitPrice = addOn.Price;
-                lineTotal = addOn.Price * item.Quantity * (perNight ? nights : 1);
-
-                addOnsTotal += lineTotal;
+                addOnsTotal += CalculateAddOnLineTotal(addOn, item, nights, request.Guests);
             }
         }
 
@@ -193,15 +192,8 @@ public sealed class ReservationService
         await _context.SaveChangesAsync();
 
 
-        if (addOnItems.Count > 0)
+        if (addOnItems.Count > 0 && addOnById.Count > 0)
         {
-            var addOnIds = addOnItems.Select(a => a.AddOnId).Distinct().ToList();
-            var addOns = await _context.Set<AddOn>()
-                .Where(a => addOnIds.Contains(a.Id))
-                .ToListAsync();
-
-            var addOnById = addOns.ToDictionary(a => a.Id);
-
             var reservationAddOns = new List<ReservationAddOn>();
 
             foreach (var item in addOnItems)
@@ -209,16 +201,14 @@ public sealed class ReservationService
                 if (!addOnById.TryGetValue(item.AddOnId, out var addOn))
                     continue; // already validated above but safe-guard
 
-                var perNight = string.Equals(addOn.PricingModel, "PerNight", StringComparison.OrdinalIgnoreCase);
-                var unitPrice = addOn.Price;
-                var lineTotal = addOn.Price * item.Quantity * (perNight ? nights : 1);
+                var lineTotal = CalculateAddOnLineTotal(addOn, item, nights, request.Guests);
 
                 reservationAddOns.Add(new ReservationAddOn
                 {
                     ReservationId = entity.Id,
                     AddOnId = addOn.Id,
                     Quantity = item.Quantity,
-                    UnitPrice = unitPrice,
+                    UnitPrice = addOn.Price,
                     LineTotal = lineTotal
                 });
             }
@@ -232,31 +222,13 @@ public sealed class ReservationService
 
         await tx.CommitAsync();
 
-
-        try
+        if (sendNotification)
         {
-            if (!string.IsNullOrWhiteSpace(entity.UserId))
-            {
-                await _notifications.CreateAsync(new NotificationCreateRequest
-                {
-                    UserId = entity.UserId,
-                    ReservationId = entity.Id,
-                    Type = "reservation_created",
-                    Message = $"Your reservation {entity.ConfirmationNumber} has been created."
-                });
-            }
-        }
-        catch
-        {
-            // ignore notification failure
+            await SendReservationCreatedNotificationAsync(entity);
         }
 
-        return MapToResponse(entity);
+        return entity;
     }
-
-
-    public override Task<ReservationResponse?> UpdateAsync(int id, ReservationUpsertRequest request)
-        => base.UpdateAsync(id, request);
 
     protected override Task BeforeUpdate(Reservation entity, ReservationUpsertRequest request)
     {
@@ -383,24 +355,64 @@ public sealed class ReservationService
 
 
 
-    public async Task<ReservationResponse> CreateWithPaymentIntentAsync(ReservationUpsertRequest request)
-    {
-        var entity = new Reservation();
-        MapInsertToEntity(entity, request);
+    // public async Task<ReservationResponse> CreateWithPaymentIntentAsync(ReservationUpsertRequest request)
+    // {
+    //     var entity = new Reservation();
+    //     MapInsertToEntity(entity, request);
 
-        await BeforeInsert(entity, request);
+    //     await BeforeInsert(entity, request);
 
-        _context.Set<Reservation>().Add(entity);
-        await _context.SaveChangesAsync();
+    //     _context.Set<Reservation>().Add(entity);
+    //     await _context.SaveChangesAsync();
 
-        return MapToResponse(entity);
-    }
+    //     return MapToResponse(entity);
+    // }
 
 
     private static string GenerateConfirmationNumber()
     {
         var token = Guid.NewGuid().ToString("N")[..6].ToUpperInvariant();
         return $"RW-{DateTime.UtcNow:yyyyMMddHHmmss}-{token}";
+    }
+
+    private static decimal CalculateAddOnLineTotal(AddOn addOn, ReservationAddOnItem item, int nights, int guests)
+    {
+        var model = addOn.PricingModel ?? "";
+        var perNight = string.Equals(model, "PerNight", StringComparison.OrdinalIgnoreCase);
+        var perDay = model.Equals("PerDay", StringComparison.OrdinalIgnoreCase);
+        var perGuestPerNight = string.Equals(model, "PerGuestPerNight", StringComparison.OrdinalIgnoreCase);
+
+        if (perNight) return addOn.Price * item.Quantity * nights;
+        if (perDay)
+        {
+            var days = nights + 1; // 3 nights = 4 days
+            return addOn.Price * item.Quantity * days;
+        }
+        if (perGuestPerNight) return addOn.Price * item.Quantity * nights * guests;
+
+        // PerStay
+        return addOn.Price * item.Quantity;
+    }
+
+    private async Task SendReservationCreatedNotificationAsync(Reservation entity)
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(entity.UserId))
+            {
+                await _notifications.CreateAsync(new NotificationCreateRequest
+                {
+                    UserId = entity.UserId,
+                    ReservationId = entity.Id,
+                    Type = "reservation_created",
+                    Message = $"Your reservation {entity.ConfirmationNumber} has been created."
+                });
+            }
+        }
+        catch
+        {
+            // ignore notification failure
+        }
     }
 
     public override async Task<ReservationResponse?> GetByIdAsync(int id) => await base.GetByIdAsync(id);
@@ -458,5 +470,7 @@ public sealed class ReservationService
 
         return resp;
     }
+
+
 
 }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using RoomWise.Api.Auth;
 using RoomWise.Api.Data;
 using RoomWise.Model;
@@ -81,7 +82,60 @@ public class AuthController : ControllerBase
             return Unauthorized("Invalid email or password.");
 
         var token = await _jwtTokenService.CreateTokenAsync(user);
+        var (refreshToken, refreshExpiresUtc) = await IssueRefreshTokenAsync(user);
 
-        return Ok(new { token });
+        return Ok(new
+        {
+            token,
+            refreshToken,
+            refreshExpiresUtc
+        });
+    }
+
+    [HttpPost("refresh")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+            return BadRequest("Refresh token is required.");
+
+        var tokenRow = await _context.Set<IdentityUserToken<string>>()
+            .FirstOrDefaultAsync(t =>
+                t.LoginProvider == "RoomWise" &&
+                t.Name == "RefreshToken" &&
+                t.Value.StartsWith(request.RefreshToken + "|"));
+
+        if (tokenRow is null) return Unauthorized("Invalid refresh token.");
+
+        var parts = tokenRow.Value.Split('|', 2);
+        if (parts.Length != 2 || !DateTime.TryParse(parts[1], out var expiresUtc))
+            return Unauthorized("Invalid refresh token.");
+
+        if (DateTime.UtcNow >= expiresUtc)
+            return Unauthorized("Refresh token expired.");
+
+        var user = await _userManager.FindByIdAsync(tokenRow.UserId);
+        if (user is null) return Unauthorized("Invalid refresh token.");
+
+        var accessToken = await _jwtTokenService.CreateTokenAsync(user);
+        var (newRefresh, newRefreshExpiry) = await IssueRefreshTokenAsync(user);
+
+        return Ok(new
+        {
+            token = accessToken,
+            refreshToken = newRefresh,
+            refreshExpiresUtc = newRefreshExpiry
+        });
+    }
+
+    private async Task<(string token, DateTime expiresUtc)> IssueRefreshTokenAsync(AppUser user)
+    {
+        var refreshToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+        var expires = DateTime.UtcNow.AddDays(30);
+        var value = $"{refreshToken}|{expires:o}";
+
+        // store in AspNetUserTokens
+        await _userManager.SetAuthenticationTokenAsync(user, "RoomWise", "RefreshToken", value);
+        return (refreshToken, expires);
     }
 }

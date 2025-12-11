@@ -237,6 +237,7 @@ public sealed class HotelService
 		var hotel = await _context.Set<Hotel>()
 			.Include(h => h.City)
 			.Include(h => h.Images)
+			.Include(h => h.AddOns)
 			.Include(h => h.HotelFacilities)
 				.ThenInclude(hf => hf.Facility)
 			.Include(h => h.RoomTypes)
@@ -252,7 +253,21 @@ public sealed class HotelService
 			Rating = (double)hotel.Rating,
 			City = hotel.City.Name,
 			Amenities = hotel.HotelFacilities.Select(hf => hf.Facility.Name).ToList(),
-			Photos = hotel.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).ToList()
+			Photos = hotel.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).ToList(),
+			AddOns = hotel.AddOns
+			.Where(a => a.IsActive)
+			.Select(a => new AddOnResponse
+			{
+				Id = a.Id,
+				HotelId = a.HotelId,
+				Name = a.Name,
+				Description = a.Description,
+				PricingModel = a.PricingModel,   // "PerNight" / "PerGuestPerNight" / "PerStay"
+				Price = a.Price,
+				Currency = a.Currency,
+				IsActive = a.IsActive
+			})
+			.ToList()
 		};
 
 		var types = hotel.RoomTypes.ToList();
@@ -262,6 +277,20 @@ public sealed class HotelService
 		int nights = hasDates ? (checkOut!.Value.Date - checkIn!.Value.Date).Days : 0;
 
 		var eligibleTypes = types.Where(rt => rt.Capacity >= requestedGuests).ToList();
+
+		var roomTypeIds = eligibleTypes.Select(rt => rt.Id).ToList();
+
+		var roomTypeImages = await _context.Set<RoomTypeImage>()
+			.Where(i => roomTypeIds.Contains(i.RoomTypeId))
+			.OrderBy(i => i.SortOrder)
+			.ToListAsync();
+
+		var imagesByRoomType = roomTypeImages
+			.GroupBy(i => i.RoomTypeId)
+			.ToDictionary(
+				g => g.Key,
+				g => g.Select(x => x.Url).ToList()
+			);
 
 		// Tags for this hotel
 		var tags = await _context.Set<HotelTag>()
@@ -302,7 +331,6 @@ public sealed class HotelService
 							&& checkIn!.Value < r.CheckOut)
 				.ToListAsync();
 		}
-
 		var details = new List<AvailableRoomType>();
 		foreach (var rt in eligibleTypes)
 		{
@@ -320,8 +348,12 @@ public sealed class HotelService
 			{
 				if (hasAvailabilityTable)
 				{
-					var dates = Enumerable.Range(0, nights).Select(i => checkIn!.Value.Date.AddDays(i));
-					roomsLeft = dates.Select(d => availabilities.FirstOrDefault(a => a.RoomTypeId == rt.Id && a.Date == d)?.Available ?? 0)
+					var dates = Enumerable.Range(0, nights)
+						.Select(i => checkIn!.Value.Date.AddDays(i));
+
+					roomsLeft = dates
+						.Select(d => availabilities
+							.FirstOrDefault(a => a.RoomTypeId == rt.Id && a.Date == d)?.Available ?? 0)
 						.Min();
 				}
 				else
@@ -331,13 +363,22 @@ public sealed class HotelService
 				}
 			}
 
+			imagesByRoomType.TryGetValue(rt.Id, out var urls);
+			var thumbnail = urls?.FirstOrDefault();
+
 			details.Add(new AvailableRoomType
 			{
 				RoomTypeId = rt.Id,
 				Name = rt.Name,
 				Capacity = rt.Capacity,
 				NightlyPrice = nightly,
-				RoomsLeft = roomsLeft
+				RoomsLeft = roomsLeft,
+
+				// NEW fields:
+				ThumbnailUrl = thumbnail,
+				ImageUrls = urls ?? new List<string>(),
+				BedType = rt.BedType,
+				IsSmokingAllowed = rt.IsSmokingAllowed
 			});
 		}
 

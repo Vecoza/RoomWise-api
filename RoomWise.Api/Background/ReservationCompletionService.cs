@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RoomWise.Api.Data;
 using RoomWise.Model;
+using RoomWise.Services.Interface;
 
 namespace RoomWise.Api.Background;
 
@@ -49,6 +50,7 @@ public sealed class ReservationCompletionService : BackgroundService
     {
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var loyalty = scope.ServiceProvider.GetRequiredService<ILoyaltyService>();
 
         var today = DateTime.UtcNow.Date;
 
@@ -63,6 +65,29 @@ public sealed class ReservationCompletionService : BackgroundService
         foreach (var r in toComplete)
         {
             r.Status = "Completed";
+
+            // Award loyalty (earn) only after completion, and only if not already earned
+            var hasLoyalty = await db.Set<LoyaltyPoint>()
+                .AnyAsync(lp => lp.ReservationId == r.Id && lp.Delta > 0, ct);
+            if (hasLoyalty) continue;
+
+            var payment = await db.Set<Payment>()
+                .Where(p => p.ReservationId == r.Id && p.Status == "Succeeded")
+                .OrderByDescending(p => p.CreatedAt)
+                .FirstOrDefaultAsync(ct);
+
+            if (payment is null) continue;
+
+            var points = (int)Math.Floor(payment.Amount / 10m);
+            if (points > 0)
+            {
+                await loyalty.AddAsync(
+                    userId: r.UserId,
+                    delta: points,
+                    reason: $"Auto-complete earn for reservation {r.Id}",
+                    reservationId: r.Id,
+                    ct: ct);
+            }
         }
 
         await db.SaveChangesAsync(ct);
