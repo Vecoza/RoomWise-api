@@ -74,21 +74,22 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var user = await _userManager.FindByEmailAsync(request.Email);
-        if (user is null)
-            return Unauthorized("Invalid email or password.");
+        if (user is null) return Unauthorized("Invalid email or password.");
 
         var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: false);
-        if (!result.Succeeded)
-            return Unauthorized("Invalid email or password.");
+        if (!result.Succeeded) return Unauthorized("Invalid email or password.");
 
         var token = await _jwtTokenService.CreateTokenAsync(user);
         var (refreshToken, refreshExpiresUtc) = await IssueRefreshTokenAsync(user);
+
+        var roles = await _userManager.GetRolesAsync(user);
 
         return Ok(new
         {
             token,
             refreshToken,
-            refreshExpiresUtc
+            refreshExpiresUtc,
+            roles
         });
     }
 
@@ -103,12 +104,13 @@ public class AuthController : ControllerBase
             .FirstOrDefaultAsync(t =>
                 t.LoginProvider == "RoomWise" &&
                 t.Name == "RefreshToken" &&
+                t.Value != null &&
                 t.Value.StartsWith(request.RefreshToken + "|"));
 
         if (tokenRow is null) return Unauthorized("Invalid refresh token.");
 
-        var parts = tokenRow.Value.Split('|', 2);
-        if (parts.Length != 2 || !DateTime.TryParse(parts[1], out var expiresUtc))
+        var parts = tokenRow.Value?.Split('|', 2);
+        if (parts is null || parts.Length != 2 || !DateTime.TryParse(parts[1], out var expiresUtc))
             return Unauthorized("Invalid refresh token.");
 
         if (DateTime.UtcNow >= expiresUtc)
@@ -120,11 +122,14 @@ public class AuthController : ControllerBase
         var accessToken = await _jwtTokenService.CreateTokenAsync(user);
         var (newRefresh, newRefreshExpiry) = await IssueRefreshTokenAsync(user);
 
+        var roles = await _userManager.GetRolesAsync(user);
+
         return Ok(new
         {
             token = accessToken,
             refreshToken = newRefresh,
-            refreshExpiresUtc = newRefreshExpiry
+            refreshExpiresUtc = newRefreshExpiry,
+            roles
         });
     }
 

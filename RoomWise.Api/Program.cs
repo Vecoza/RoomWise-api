@@ -16,12 +16,14 @@ using RoomWise.Api.Extensions;
 using RoomWise.Api.Mapping;
 using RoomWise.Api.SeedData;
 using RoomWise.Model;
+using RoomWise.Model.Options;
 using RoomWise.Services.Interface;
 using RoomWise.Services.Services;
 using Scalar.AspNetCore;
 using Stripe;
 using PaymentMethodService = RoomWise.Services.Services.PaymentMethodService;
 using ReviewService = RoomWise.Services.Services.ReviewService;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,6 +58,8 @@ IdentityModelEventSource.ShowPII = true;
 /*StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];*/
 builder.Services.Configure<RoomWise.Api.Options.StripeOptions>(
     builder.Configuration.GetSection("Stripe"));
+builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection("RabbitMq"));
+builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
 
 
 builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(RoomWiseProfile).Assembly);
@@ -104,6 +108,8 @@ builder.Services.AddTransient<IStatisticsService, StatisticsService>();
 builder.Services.AddTransient<ICountryService, CountryService>();
 builder.Services.AddTransient<ICityService, CityService>();
 builder.Services.AddTransient<IFacilityService, FacilityService>();
+builder.Services.AddSingleton<IEmailQueueService, RabbitMqEmailQueueService>();
+builder.Services.AddHostedService<EmailDeliveryWorker>();
 
 
 builder.Services.AddHostedService<ReservationReminderService>();
@@ -175,7 +181,10 @@ builder.Services
             ValidAudience = jwtSection["Audience"],
             IssuerSigningKey = signingKey,
 
-            ClockSkew = TimeSpan.Zero
+            ClockSkew = TimeSpan.Zero,
+
+            RoleClaimType = ClaimTypes.Role,
+            NameClaimType = ClaimTypes.NameIdentifier
         };
     });
 

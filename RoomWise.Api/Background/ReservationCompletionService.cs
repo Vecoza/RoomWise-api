@@ -66,7 +66,7 @@ public sealed class ReservationCompletionService : BackgroundService
         {
             r.Status = "Completed";
 
-            // Award loyalty (earn) only after completion, and only if not already earned
+
             var hasLoyalty = await db.Set<LoyaltyPoint>()
                 .AnyAsync(lp => lp.ReservationId == r.Id && lp.Delta > 0, ct);
             if (hasLoyalty) continue;

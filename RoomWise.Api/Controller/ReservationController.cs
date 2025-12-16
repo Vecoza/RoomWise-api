@@ -91,10 +91,26 @@ public class ReservationsController
                  ReservationId = reservation.Id,
                  Amount = reservation.Subtotal,
                  Currency = reservation.Currency,
-                 Provider = "Stripe"
+                 Provider = "Stripe",
+                 LoyaltyPointsToRedeem = request.LoyaltyPointsToRedeem
              }
          );
-        return Ok(new { reservation, payment, clientSecret });
+        // reload reservation to pick up any loyalty/promo adjustments to totals
+        var refreshedReservation = await _reservations.GetByIdAsync(reservation.Id) ?? reservation;
+        // align total with payment amount (post loyalty redemption)
+        refreshedReservation.Total = payment.Amount;
+
+        // If there's a payable amount but no client secret, surface an error
+        if (payment.Amount > 0 && string.IsNullOrWhiteSpace(clientSecret))
+        {
+            return StatusCode(StatusCodes.Status502BadGateway, new
+            {
+                message = "Failed to create payment intent.",
+                amount = payment.Amount
+            });
+        }
+
+        return Ok(new { reservation = refreshedReservation, payment, clientSecret });
     }
 
 
