@@ -21,7 +21,8 @@ public class AvailableRoomType
 	public int RoomTypeId { get; set; }
 	public string Name { get; set; } = string.Empty;
 	public int Capacity { get; set; }
-	public decimal NightlyPrice { get; set; }
+	public decimal NightlyPrice { get; set; }           // effective (may include promo)
+	public decimal OriginalNightlyPrice { get; set; }    // pre-promo price
 	public int RoomsLeft { get; set; }
 
 	// TEST
@@ -29,4 +30,10 @@ public class AvailableRoomType
 	public List<string> ImageUrls { get; set; } = new();
 	public string BedType { get; set; } = string.Empty;
 	public bool IsSmokingAllowed { get; set; }
+
+    // Promo info (optional)
+    public string? PromotionTitle { get; set; }
+    public decimal? PromotionDiscountPercent { get; set; }
+    public decimal? PromotionDiscountFixed { get; set; }
+    public DateTime? PromotionEndDate { get; set; }
 }

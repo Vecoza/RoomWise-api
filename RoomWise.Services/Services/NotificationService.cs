@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RoomWise.Model;
+using RoomWise.Model.Messaging;
 using RoomWise.Model.Requests;
 using RoomWise.Model.Responses;
 using RoomWise.Services.Interface;
@@ -9,8 +10,13 @@ namespace RoomWise.Services.Services;
 public class NotificationService : INotificationService
 {
     private readonly DbContext _db;
+    private readonly IEmailQueueService _emailQueue;
 
-    public NotificationService(DbContext db) => _db = db;
+    public NotificationService(DbContext db, IEmailQueueService emailQueue)
+    {
+        _db = db;
+        _emailQueue = emailQueue;
+    }
 
     public async Task<NotificationResponse> CreateAsync(
         NotificationCreateRequest request,
@@ -28,6 +34,8 @@ public class NotificationService : INotificationService
 
         _db.Set<Notification>().Add(entity);
         await _db.SaveChangesAsync(ct);
+
+        await TryEnqueueEmailAsync(entity, ct);
 
         return ToResponse(entity);
     }
@@ -73,6 +81,40 @@ public class NotificationService : INotificationService
         {
             entity.IsRead = true;
             await _db.SaveChangesAsync(ct);
+        }
+    }
+
+    private async Task TryEnqueueEmailAsync(Notification notification, CancellationToken ct)
+    {
+        try
+        {
+            var email = await _db.Set<AppUser>()
+                .Where(u => u.Id == notification.UserId)
+                .Select(u => u.Email)
+                .FirstOrDefaultAsync(ct);
+
+            if (string.IsNullOrWhiteSpace(email)) return;
+
+            var subject = notification.Type switch
+            {
+                "reservation_created" => "Your reservation was created",
+                "payment_succeeded"   => "Payment confirmed",
+                "reservation_reminder" => "Reservation reminder",
+                _ => "RoomWise notification"
+            };
+
+            await _emailQueue.PublishAsync(new EmailMessage
+            {
+                To = email,
+                Subject = subject,
+                Body = notification.Message,
+                ReservationId = notification.ReservationId,
+                UserId = notification.UserId
+            }, ct);
+        }
+        catch
+        {
+            // swallow – queueing email should not block core flow
         }
     }
 

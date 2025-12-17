@@ -1,5 +1,6 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using RoomWise.Model;
 using RoomWise.Model.Requests;
 using RoomWise.Model.Responses;
@@ -61,7 +62,7 @@ public class UserProfileService : IUserProfileService
                 UpdatedAt = DateTime.UtcNow
             };
 
-            _db.Set<UserProfile>().Add(entity);
+            _db.Set<UserProfile>().Add(entity); // may race with a parallel request
         }
         else
         {
@@ -73,7 +74,18 @@ public class UserProfileService : IUserProfileService
             entity.UpdatedAt = DateTime.UtcNow;
         }
 
-        await _db.SaveChangesAsync(ct);
+        try
+        {
+            await _db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pg && pg.SqlState == PostgresErrorCodes.UniqueViolation)
+        {
+            // Handle a rare race where another request created the profile first.
+            var existing = await _db.Set<UserProfile>().FirstOrDefaultAsync(p => p.UserId == userId, ct);
+            if (existing is null) throw;
+            entity = existing;
+        }
+
         return _mapper.Map<UserProfileResponse>(entity);
     }
 

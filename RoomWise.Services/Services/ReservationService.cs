@@ -20,18 +20,21 @@ public sealed class ReservationService
     private readonly IRoomAvailabilityService _availability;
     private readonly INotificationService _notifications;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ILoyaltyService _loyalty;
 
     public ReservationService(
         DbContext context,
         IMapper mapper,
         IRoomAvailabilityService availability,
         INotificationService notifications,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        ILoyaltyService loyalty)
         : base(context, mapper)
     {
         _availability = availability;
         _notifications = notifications;
         _httpContextAccessor = httpContextAccessor;
+        _loyalty = loyalty;
     }
 
 
@@ -60,12 +63,12 @@ public sealed class ReservationService
 
     //InserAsync
     public override async Task<ReservationResponse> CreateAsync(ReservationUpsertRequest request)
-        => MapToResponse(await CreateReservationCoreAsync(request, sendNotification: true));
+        => MapToResponse(await CreateReservationCoreAsync(request, sendNotification: true, CancellationToken.None));
 
     public async Task<ReservationResponse> CreateWithPaymentIntentAsync(ReservationUpsertRequest request)
-        => MapToResponse(await CreateReservationCoreAsync(request, sendNotification: false));
+        => MapToResponse(await CreateReservationCoreAsync(request, sendNotification: false, CancellationToken.None));
 
-    private async Task<Reservation> CreateReservationCoreAsync(ReservationUpsertRequest request, bool sendNotification)
+    private async Task<Reservation> CreateReservationCoreAsync(ReservationUpsertRequest request, bool sendNotification, CancellationToken ct)
     {
 
         var checkIn = request.CheckIn.Date;
@@ -91,7 +94,7 @@ public sealed class ReservationService
                         && r.StartDate <= checkIn
                         && r.EndDate >= checkOut)
             .Select(r => (decimal?)r.Price)
-            .MinAsync();
+            .MinAsync(ct);
 
         // 2) Fallback to BasePrice in memory
         var nightly = dbRate ?? roomType.BasePrice;
@@ -109,7 +112,7 @@ public sealed class ReservationService
 
             var addOns = await _context.Set<AddOn>()
                 .Where(a => addOnIds.Contains(a.Id))
-                .ToListAsync();
+                .ToListAsync(ct);
 
             addOnById = addOns.ToDictionary(a => a.Id);
 
@@ -143,10 +146,20 @@ public sealed class ReservationService
         entity.HotelId = roomType.HotelId;
         entity.RoomTypeId = roomType.Id;
 
+        // Apply promotion if supplied or applicable
+        var promo = await ResolvePromotionAsync(request, roomType.HotelId, checkIn, checkOut, nights, ct);
+        if (promo is not null)
+        {
+            entity.PromotionId = promo.Id;
+        }
+
+        var subtotalBeforePromo = roomTotal + addOnsTotal;
+        var discountedSubtotal = ApplyPromotion(subtotalBeforePromo, promo);
+
         entity.PublicId = entity.PublicId == Guid.Empty ? Guid.NewGuid() : entity.PublicId;
         entity.CheckIn = checkIn;
         entity.CheckOut = checkOut;
-        entity.Subtotal = roomTotal + addOnsTotal;
+        entity.Subtotal = discountedSubtotal;
         entity.Total = entity.Subtotal + entity.TaxesAndFees + entity.ServiceFee;
         entity.Currency = roomType.Currency;
         entity.CreatedAt = DateTime.UtcNow;
@@ -155,7 +168,7 @@ public sealed class ReservationService
 
 
 
-        using var tx = await _context.Database.BeginTransactionAsync();
+        using var tx = await _context.Database.BeginTransactionAsync(ct);
 
         var hasRoomAvailability = _context.Model.FindEntityType(typeof(RoomAvailability)) is not null;
         if (hasRoomAvailability)
@@ -180,7 +193,7 @@ public sealed class ReservationService
                              && r.Status != "Cancelled"
                              && r.CheckIn < dayEnd
                              && r.CheckOut > dayStart)
-                    .CountAsync();
+                    .CountAsync(ct);
 
                 if (overlappingCount >= stock)
                     throw new InvalidOperationException($"No availability on {dayStart:yyyy-MM-dd}.");
@@ -189,7 +202,16 @@ public sealed class ReservationService
 
         _context.Set<Reservation>().Add(entity);
 
-        await _context.SaveChangesAsync();
+        // 4) Auto-redeem all loyalty points up to the total
+        var balance = await _loyalty.GetBalanceAsync(userId, ct);
+        var redeem = (int)Math.Min(balance, Math.Floor(entity.Total));
+        if (redeem > 0)
+        {
+            entity.Total -= redeem;
+            if (entity.Total < 0) entity.Total = 0;
+        }
+
+        await _context.SaveChangesAsync(ct);
 
 
         if (addOnItems.Count > 0 && addOnById.Count > 0)
@@ -216,11 +238,22 @@ public sealed class ReservationService
             if (reservationAddOns.Count > 0)
             {
                 _context.Set<ReservationAddOn>().AddRange(reservationAddOns);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(ct);
             }
         }
 
-        await tx.CommitAsync();
+        await tx.CommitAsync(ct);
+
+        // Deduct loyalty after reservation is persisted (once)
+        if (redeem > 0)
+        {
+            await _loyalty.AddAsync(
+                userId: entity.UserId,
+                delta: -redeem,
+                reason: $"Redeem {redeem} points for reservation {entity.Id}",
+                reservationId: entity.Id,
+                ct: ct);
+        }
 
         if (sendNotification)
         {
@@ -314,6 +347,7 @@ public sealed class ReservationService
             .ThenInclude(h => h.City)
             .Include(r => r.Hotel)
             .ThenInclude(h => h.Images)
+            .Include(r => r.Payments)
             .Include(r => r.AddOns)
             .ThenInclude(ra => ra.AddOn)
             .Where(r => r.UserId == userId);
@@ -375,6 +409,53 @@ public sealed class ReservationService
         return $"RW-{DateTime.UtcNow:yyyyMMddHHmmss}-{token}";
     }
 
+    private static decimal ApplyPromotion(decimal subtotal, Promotion? promo)
+    {
+        if (promo is null) return subtotal;
+        var result = subtotal;
+        if (promo.DiscountPercent.HasValue)
+            result = result * (1 - promo.DiscountPercent.Value / 100m);
+        if (promo.DiscountFixed.HasValue)
+            result = result - promo.DiscountFixed.Value;
+        return result < 0 ? 0 : result;
+    }
+
+    private async Task<Promotion?> ResolvePromotionAsync(
+        ReservationUpsertRequest request,
+        int hotelId,
+        DateTime checkIn,
+        DateTime checkOut,
+        int nights,
+        CancellationToken ct)
+    {
+        Promotion? promo = null;
+
+        if (request.PromotionId.HasValue)
+        {
+            promo = await _context.Set<Promotion>()
+                .FirstOrDefaultAsync(p =>
+                    p.Id == request.PromotionId.Value &&
+                    p.IsActive &&
+                    p.HotelId == hotelId &&
+                    p.StartDate <= checkIn.Date &&
+                    p.EndDate >= checkOut.Date &&
+                    p.MinNights <= nights, ct);
+        }
+        else
+        {
+            promo = await _context.Set<Promotion>()
+                .Where(p => p.IsActive
+                            && p.HotelId == hotelId
+                            && p.StartDate <= checkIn.Date
+                            && p.EndDate >= checkOut.Date
+                            && p.MinNights <= nights)
+                .OrderBy(p => p.EndDate)
+                .FirstOrDefaultAsync(ct);
+        }
+
+        return promo;
+    }
+
     private static decimal CalculateAddOnLineTotal(AddOn addOn, ReservationAddOnItem item, int nights, int guests)
     {
         var model = addOn.PricingModel ?? "";
@@ -423,6 +504,7 @@ public sealed class ReservationService
             .Include(r => r.Hotel).ThenInclude(h => h.City)
             .Include(r => r.Hotel).ThenInclude(h => h.Images)
             .Include(r => r.AddOns).ThenInclude(ra => ra.AddOn)
+            .Include(r => r.Payments)
             .FirstOrDefaultAsync(r => r.PublicId == publicId, ct);
 
         return entity is null ? null : MapToResponse(entity);
@@ -453,6 +535,21 @@ public sealed class ReservationService
             .OrderBy(i => i.SortOrder)
             .Select(i => i.Url)
             .FirstOrDefault() ?? resp.ThumbnailUrl;
+
+        // AmountPaid / Total from latest payment if available
+        var latestPayment = entity.Payments?
+            .OrderByDescending(p => p.CreatedAt)
+            .FirstOrDefault();
+
+        if (latestPayment != null)
+        {
+            resp.AmountPaid = latestPayment.Amount;
+            resp.Total = latestPayment.Amount;
+        }
+        else
+        {
+            resp.AmountPaid = entity.Total;
+        }
 
         var userId = _httpContextAccessor.HttpContext?
             .User

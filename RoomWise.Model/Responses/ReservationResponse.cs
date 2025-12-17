@@ -16,6 +16,7 @@ public class ReservationResponse
     public decimal TaxesAndFees { get; set; }
     public decimal ServiceFee { get; set; }
     public decimal Total { get; set; }
+    public decimal AmountPaid { get; set; }
     public string Currency { get; set; } = "USD";
     public int? PromotionId { get; set; }
     public DateTime CreatedAt { get; set; }

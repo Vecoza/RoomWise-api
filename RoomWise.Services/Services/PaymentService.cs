@@ -62,16 +62,15 @@ public class PaymentService
         if (baseAmount <= 0)
             throw new InvalidOperationException("Payment amount must be greater than zero.");
 
-        var balance = await _loyalty.GetBalanceAsync(reservation.UserId);
-        var requestedRedeem = Math.Max(0, request.LoyaltyPointsToRedeem ?? 0);
-        var redeemPoints = Math.Min(requestedRedeem, balance);
-        // cap redemption so we don't exceed the reservation amount
-        redeemPoints = (int)Math.Min(redeemPoints, Math.Floor(baseAmount));
-
-        var amount = baseAmount - redeemPoints;
+        // Reservation totals already include auto-applied loyalty; do not redeem again
+        var redeemPoints = 0;
+        var amount = baseAmount;
+        // keep reservation total aligned with the payable amount
+        reservation.Total = amount;
+        await _context.SaveChangesAsync();
         if (amount <= 0)
         {
-            // Fully covered by loyalty: no Stripe PaymentIntent needed
+
             var loyaltyPayment = new Payment
             {
                 ReservationId = reservation.Id,

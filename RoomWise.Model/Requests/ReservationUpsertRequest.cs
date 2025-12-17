@@ -22,6 +22,8 @@ public class ReservationUpsertRequest
 
     public int? PromotionId { get; set; }
 
+    public int? LoyaltyPointsToRedeem { get; set; }
+
     public List<ReservationAddOnItem> AddOns { get; set; } = new();
 }
 
