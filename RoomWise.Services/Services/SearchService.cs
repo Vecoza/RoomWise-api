@@ -41,7 +41,7 @@ public sealed class SearchService : ISearchService
 
         var hotelIds = candidateHotels.Select(h => h.Id).ToList();
 
-        // Preload tags
+
         var tagsLookup = await _db.Set<HotelTag>()
             .Include(ht => ht.Tag)
             .Where(ht => hotelIds.Contains(ht.HotelId))
@@ -51,7 +51,7 @@ public sealed class SearchService : ISearchService
                 g => g.Select(x => new TagResponse { Id = x.TagId, Name = x.Tag.Name }).ToList(),
                 ct);
 
-        // Filter by facilities (must include all requested)
+
         if (req.FacilityIds is { Length: > 0 })
         {
             var requested = req.FacilityIds.Distinct().ToHashSet();
@@ -69,7 +69,7 @@ public sealed class SearchService : ISearchService
             hotelIds = candidateHotels.Select(h => h.Id).ToList();
         }
 
-        // Filter by add-ons (must include all requested)
+
         if (req.AddOnIds is { Length: > 0 })
         {
             var requested = req.AddOnIds.Distinct().ToHashSet();

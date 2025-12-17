@@ -38,7 +38,7 @@ public class ReviewService
 
         var today = DateTime.UtcNow.Date;
 
-        // 1) Check that this reservation belongs to this user and hotel, and is finished
+
         var reservation = await _ctx.Set<Reservation>()
             .FirstOrDefaultAsync(r =>
                 r.Id == req.ReservationId &&
@@ -50,7 +50,7 @@ public class ReviewService
         if (reservation is null)
             throw new InvalidOperationException("You can review this hotel only after a completed stay.");
 
-        // 2) Allow only one review per reservation per user
+
         var already = await _ctx.Set<Review>()
             .AnyAsync(r => r.ReservationId == req.ReservationId && r.UserId == req.UserId);
 

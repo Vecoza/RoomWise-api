@@ -31,7 +31,7 @@ public class PromotionService
         {
             var from = s.From.Value.Date;
             var to = s.To.Value.Date;
-            // overlap
+
             q = q.Where(x => x.EndDate >= from && x.StartDate <= to);
         }
 

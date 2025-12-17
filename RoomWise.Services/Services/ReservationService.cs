@@ -61,7 +61,6 @@ public sealed class ReservationService
         return q.OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.Id);
     }
 
-    //InserAsync
     public override async Task<ReservationResponse> CreateAsync(ReservationUpsertRequest request)
         => MapToResponse(await CreateReservationCoreAsync(request, sendNotification: true, CancellationToken.None));
 
@@ -88,7 +87,6 @@ public sealed class ReservationService
         var nights = (checkOut - checkIn).Days;
         if (nights <= 0) throw new ArgumentException("Invalid date range.");
 
-        // 1) Try to get room rate from DB (nullable)
         var dbRate = await _context.Set<RoomRate>()
             .Where(r => r.RoomTypeId == request.RoomTypeId
                         && r.StartDate <= checkIn
@@ -96,12 +94,10 @@ public sealed class ReservationService
             .Select(r => (decimal?)r.Price)
             .MinAsync(ct);
 
-        // 2) Fallback to BasePrice in memory
         var nightly = dbRate ?? roomType.BasePrice;
 
         var roomTotal = nightly * nights;
 
-        // 2) Add-ons
         decimal addOnsTotal = 0m;
         var addOnItems = request.AddOns ?? new List<ReservationAddOnItem>();
         Dictionary<int, AddOn> addOnById = new();
@@ -131,9 +127,8 @@ public sealed class ReservationService
             }
         }
 
-        // 3) Create entity
         var entity = new Reservation();
-        MapInsertToEntity(entity, request);   // 1) map from request
+        MapInsertToEntity(entity, request);
 
         var userId = _httpContextAccessor.HttpContext?
             .User
@@ -146,7 +141,6 @@ public sealed class ReservationService
         entity.HotelId = roomType.HotelId;
         entity.RoomTypeId = roomType.Id;
 
-        // Apply promotion if supplied or applicable
         var promo = await ResolvePromotionAsync(request, roomType.HotelId, checkIn, checkOut, nights, ct);
         if (promo is not null)
         {
@@ -202,7 +196,6 @@ public sealed class ReservationService
 
         _context.Set<Reservation>().Add(entity);
 
-        // 4) Auto-redeem all loyalty points up to the total
         var balance = await _loyalty.GetBalanceAsync(userId, ct);
         var redeem = (int)Math.Min(balance, Math.Floor(entity.Total));
         if (redeem > 0)
@@ -221,7 +214,7 @@ public sealed class ReservationService
             foreach (var item in addOnItems)
             {
                 if (!addOnById.TryGetValue(item.AddOnId, out var addOn))
-                    continue; // already validated above but safe-guard
+                    continue;
 
                 var lineTotal = CalculateAddOnLineTotal(addOn, item, nights, request.Guests);
 
@@ -244,7 +237,6 @@ public sealed class ReservationService
 
         await tx.CommitAsync(ct);
 
-        // Deduct loyalty after reservation is persisted (once)
         if (redeem > 0)
         {
             await _loyalty.AddAsync(
@@ -285,7 +277,6 @@ public sealed class ReservationService
         if (reservation is null)
             throw new KeyNotFoundException($"Reservation {id} not found.");
 
-        // Ownership check
         if (!string.Equals(reservation.UserId, userId, StringComparison.OrdinalIgnoreCase))
             throw new UnauthorizedAccessException("You do not own this reservation.");
 
@@ -298,7 +289,6 @@ public sealed class ReservationService
         if (reservation.Status != "Pending" && reservation.Status != "Confirmed")
             throw new InvalidOperationException("Reservation cannot be cancelled in its current status.");
 
-        // Must cancel at least 24 hours before check-in
         if (DateTime.UtcNow >= reservation.CheckIn.AddDays(-1))
             throw new InvalidOperationException("Reservation can only be cancelled at least 24 hours before check-in.");
 
@@ -334,7 +324,6 @@ public sealed class ReservationService
         }
         catch
         {
-            // ignore notification failures
         }
     }
 
@@ -389,18 +378,9 @@ public sealed class ReservationService
 
 
 
-    // public async Task<ReservationResponse> CreateWithPaymentIntentAsync(ReservationUpsertRequest request)
-    // {
-    //     var entity = new Reservation();
-    //     MapInsertToEntity(entity, request);
 
-    //     await BeforeInsert(entity, request);
 
-    //     _context.Set<Reservation>().Add(entity);
-    //     await _context.SaveChangesAsync();
 
-    //     return MapToResponse(entity);
-    // }
 
 
     private static string GenerateConfirmationNumber()
@@ -466,12 +446,11 @@ public sealed class ReservationService
         if (perNight) return addOn.Price * item.Quantity * nights;
         if (perDay)
         {
-            var days = nights + 1; // 3 nights = 4 days
+            var days = nights + 1;
             return addOn.Price * item.Quantity * days;
         }
         if (perGuestPerNight) return addOn.Price * item.Quantity * nights * guests;
 
-        // PerStay
         return addOn.Price * item.Quantity;
     }
 
@@ -492,7 +471,6 @@ public sealed class ReservationService
         }
         catch
         {
-            // ignore notification failure
         }
     }
 
@@ -536,7 +514,6 @@ public sealed class ReservationService
             .Select(i => i.Url)
             .FirstOrDefault() ?? resp.ThumbnailUrl;
 
-        // AmountPaid / Total from latest payment if available
         var latestPayment = entity.Payments?
             .OrderByDescending(p => p.CreatedAt)
             .FirstOrDefault();

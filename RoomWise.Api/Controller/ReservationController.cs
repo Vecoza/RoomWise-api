@@ -52,8 +52,7 @@ public class ReservationsController
     //     return NoContent();
     // }
 
-    // POST /api/reservations/123/cancel
-    // API route (expects int)
+
     [HttpPost("{id:int}/cancel")]
     public async Task<IActionResult> Cancel(int id, CancellationToken ct)
     {
@@ -95,12 +94,12 @@ public class ReservationsController
                  LoyaltyPointsToRedeem = request.LoyaltyPointsToRedeem
              }
          );
-        // reload reservation to pick up any loyalty/promo adjustments to totals
+
         var refreshedReservation = await _reservations.GetByIdAsync(reservation.Id) ?? reservation;
-        // align total with payment amount (post loyalty redemption)
+
         refreshedReservation.Total = payment.Amount;
 
-        // If there's a payable amount but no client secret, surface an error
+
         if (payment.Amount > 0 && string.IsNullOrWhiteSpace(clientSecret))
         {
             return StatusCode(StatusCodes.Status502BadGateway, new

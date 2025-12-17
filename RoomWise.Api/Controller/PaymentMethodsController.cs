@@ -32,7 +32,7 @@ public sealed class PaymentMethodsController : ControllerBase
         return userId;
     }
 
-    // GET /api/me/payment-methods?page=1&pageSize=20
+
     [HttpGet]
     public async Task<ActionResult<PagedResult<PaymentMethodResponse>>> List(
         [FromQuery] int page = 0,
@@ -46,8 +46,7 @@ public sealed class PaymentMethodsController : ControllerBase
         return Ok(result);
     }
 
-    // POST /api/me/payment-methods
-    // Frontend sends StripePaymentMethodId + display details.
+
     [HttpPost]
     public async Task<ActionResult<PaymentMethodResponse>> Create(
         [FromBody] PaymentMethodUpsertRequest req,
@@ -60,7 +59,7 @@ public sealed class PaymentMethodsController : ControllerBase
         return Ok(created);
     }
 
-    // DELETE /api/me/payment-methods/{id}
+
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
     {

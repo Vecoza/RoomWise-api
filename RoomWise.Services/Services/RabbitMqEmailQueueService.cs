@@ -31,7 +31,7 @@ public sealed class RabbitMqEmailQueueService : IEmailQueueService, IDisposable
         _connection = factory.CreateConnection();
         _channel = _connection.CreateModel();
 
-        // Durable queue to survive restarts; no exchange binding so default is used.
+
         _channel.QueueDeclare(
             queue: _options.EmailQueueName,
             durable: true,

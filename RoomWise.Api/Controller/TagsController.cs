@@ -1,4 +1,4 @@
-// RoomWise.Api/Controller/TagsController.cs
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RoomWise.Model.Requests;

@@ -1,4 +1,4 @@
-// Services/Services/LoyaltyService.cs
+
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using RoomWise.Model;
@@ -21,7 +21,7 @@ public class LoyaltyService : ILoyaltyService
     {
         using var tx = await _db.Database.BeginTransactionAsync(ct);
 
- 
+
         _db.Set<LoyaltyPoint>().Add(new LoyaltyPoint
         {
             UserId = userId,
@@ -31,14 +31,14 @@ public class LoyaltyService : ILoyaltyService
             CreatedAt = DateTime.UtcNow
         });
 
-       var profile = await _db.Set<UserProfile>().FirstOrDefaultAsync(p => p.UserId == userId, ct);
+        var profile = await _db.Set<UserProfile>().FirstOrDefaultAsync(p => p.UserId == userId, ct);
         if (profile is null)
         {
             profile = new UserProfile
             {
                 UserId = userId,
-                FirstName = "", 
-                LastName  = "",
+                FirstName = "",
+                LastName = "",
                 PreferredLanguage = "en",
                 LoyaltyBalance = delta,
                 CreatedAt = DateTime.UtcNow,

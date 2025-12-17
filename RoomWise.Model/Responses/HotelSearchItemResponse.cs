@@ -12,7 +12,7 @@ public class HotelSearchItemResponse
 	public bool HasAvailability { get; set; }
 	public List<TagResponse> Tags { get; set; } = new();
 
-	// Optional promotion info (used by hot-deals)
+
 	public decimal? PromotionPrice { get; set; }
 	public decimal? PromotionDiscountPercent { get; set; }
 	public decimal? PromotionDiscountFixed { get; set; }

@@ -5,7 +5,7 @@ namespace RoomWise.Model.Requests;
 
 public class PaymentMethodUpsertRequest
 {
-    // Set server-side; ignored from client input to avoid binding/validation issues
+
     [JsonIgnore]
     public string UserId { get; set; } = string.Empty;
 

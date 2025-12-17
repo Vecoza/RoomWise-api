@@ -3,9 +3,9 @@ namespace RoomWise.Model.Responses;
 public class ReservationReportFilter
 {
     public int? HotelId { get; set; }
-    public DateTime? From { get; set; }   // filter by CheckIn >= From
-    public DateTime? To { get; set; }     // filter by CheckOut <= To
-    public string? Status { get; set; }   // optional: Pending / Confirmed / Completed / Cancelled
+    public DateTime? From { get; set; }
+    public DateTime? To { get; set; }
+    public string? Status { get; set; }
 }
 
 public class ReservationStatusCount
@@ -16,15 +16,15 @@ public class ReservationStatusCount
 
 public class ReservationSummaryResponse
 {
-   
+
     public int TotalReservations { get; set; }
 
-  
+
     public int TotalNights { get; set; }
 
- 
+
     public decimal TotalRevenue { get; set; }
 
-   
+
     public List<ReservationStatusCount> StatusBreakdown { get; set; } = new();
 }

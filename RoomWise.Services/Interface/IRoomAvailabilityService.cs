@@ -9,7 +9,7 @@ public interface IRoomAvailabilityService
 {
     Task BatchUpsertAsync(RoomAvailabilityBatchUpsertRequest req, CancellationToken ct = default);
 
-    // Reservation flow helpers:
+
     Task EnsureRangeConfiguredAsync(int roomTypeId, DateTime checkIn, DateTime checkOut, CancellationToken ct = default);
     Task<bool> TryConsumeRangeAsync(int roomTypeId, DateTime checkIn, DateTime checkOut, CancellationToken ct = default);
     Task RestoreRangeAsync(int roomTypeId, DateTime checkIn, DateTime checkOut, CancellationToken ct = default);

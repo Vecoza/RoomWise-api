@@ -32,7 +32,7 @@ public sealed class NotificationsController : ControllerBase
         return userId;
     }
 
-    // GET /api/me/notifications?page=1&pageSize=20
+
     [HttpGet]
     public async Task<ActionResult<PagedResult<NotificationResponse>>> List(
         [FromQuery] int page = 0,
@@ -46,8 +46,6 @@ public sealed class NotificationsController : ControllerBase
         return Ok(result);
     }
 
-    // POST /api/me/notifications
-    // Creates a notification for the current user.
     [HttpPost]
     public async Task<ActionResult<NotificationResponse>> Create(
         [FromBody] NotificationCreateRequest req,
@@ -56,13 +54,13 @@ public sealed class NotificationsController : ControllerBase
         var userId = GetUserIdOrForbid(out var forbid);
         if (forbid is not null) return forbid;
 
-        // override any client-sent UserId
+
         req.UserId = userId!;
         var created = await _notifications.CreateAsync(req, ct);
         return Ok(created);
     }
 
-    // POST /api/me/notifications/{id}/read
+
     [HttpPost("{id:int}/read")]
     public async Task<IActionResult> MarkRead(int id, CancellationToken ct = default)
     {

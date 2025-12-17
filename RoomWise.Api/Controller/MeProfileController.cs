@@ -38,7 +38,6 @@ public sealed class MeProfileController : ControllerBase
         if (string.IsNullOrWhiteSpace(userId))
             return Unauthorized();
 
-        // ✅ ensure AppUser exists
         var user = await _users.FindByIdAsync(userId);
         if (user is null)
             return Unauthorized(new { message = "User no longer exists." });
@@ -46,10 +45,10 @@ public sealed class MeProfileController : ControllerBase
         var res = await _profiles.GetMineAsync(userId, ct);
         if (res is not null) return Ok(res);
 
-        // create default profile if none
+
         var created = await _profiles.UpsertMineAsync(userId, new UserProfileUpsertRequest
         {
-            FirstName = user.UserName ?? string.Empty,  // or user.Email
+            FirstName = user.UserName ?? string.Empty,
             LastName = string.Empty,
             AvatarUrl = null,
             PreferredLanguage = "en",
@@ -68,7 +67,7 @@ public sealed class MeProfileController : ControllerBase
         if (string.IsNullOrWhiteSpace(userId))
             return Forbid();
 
-        // ✅ ensure AppUser exists
+
         var user = await _users.FindByIdAsync(userId);
         if (user is null)
             return Unauthorized(new { message = "User no longer exists." });

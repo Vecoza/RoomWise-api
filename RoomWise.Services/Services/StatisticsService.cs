@@ -14,16 +14,16 @@ public class StatisticsService : IStatisticsService
     public async Task<AdminStatsOverviewResponse> GetOverviewAsync(CancellationToken ct = default)
     {
         var reservations = _context.Set<Reservation>().AsNoTracking();
-        var payments     = _context.Set<Payment>().AsNoTracking()
+        var payments = _context.Set<Payment>().AsNoTracking()
             .Where(p => p.Status == "Succeeded");
-        var users        = _context.Set<AppUser>().AsNoTracking();
-        var roomTypes    = _context.Set<RoomType>().AsNoTracking();
+        var users = _context.Set<AppUser>().AsNoTracking();
+        var roomTypes = _context.Set<RoomType>().AsNoTracking();
 
         var totalReservations = await reservations.CountAsync(ct);
-        var totalRevenue      = await payments.SumAsync(p => (decimal?)p.Amount, ct) ?? 0m;
-        var totalUsers        = await users.CountAsync(ct);
+        var totalRevenue = await payments.SumAsync(p => (decimal?)p.Amount, ct) ?? 0m;
+        var totalUsers = await users.CountAsync(ct);
 
-        // Average stay length (in memory – fine for project scale)
+
         var stays = await reservations
             .Where(r => r.CheckOut > r.CheckIn)
             .Select(r => new { r.CheckIn, r.CheckOut })
@@ -36,9 +36,8 @@ public class StatisticsService : IStatisticsService
                 .Average(s => (s.CheckOut.Date - s.CheckIn.Date).TotalDays);
         }
 
-        // Occupancy for last 30 days
         var today = DateTime.UtcNow.Date;
-        var from  = today.AddDays(-30);
+        var from = today.AddDays(-30);
 
         var roomTypesList = await roomTypes.ToListAsync(ct);
         var totalRoomNights = roomTypesList.Sum(rt => rt.Stock * 30);
@@ -58,7 +57,7 @@ public class StatisticsService : IStatisticsService
             foreach (var r in relevantReservations)
             {
                 var start = r.CheckIn.Date < from ? from : r.CheckIn.Date;
-                var end   = r.CheckOut.Date > today ? today : r.CheckOut.Date;
+                var end = r.CheckOut.Date > today ? today : r.CheckOut.Date;
 
                 var nights = (end - start).Days;
                 if (nights > 0)
@@ -72,11 +71,11 @@ public class StatisticsService : IStatisticsService
 
         return new AdminStatsOverviewResponse
         {
-            TotalRevenue             = totalRevenue,
-            TotalReservations        = totalReservations,
-            TotalUsers               = totalUsers,
-            AvgStayLengthNights      = avgStay,
-            OccupancyRateLast30Days  = occupancy
+            TotalRevenue = totalRevenue,
+            TotalReservations = totalReservations,
+            TotalUsers = totalUsers,
+            AvgStayLengthNights = avgStay,
+            OccupancyRateLast30Days = occupancy
         };
     }
 
@@ -93,7 +92,7 @@ public class StatisticsService : IStatisticsService
             .GroupBy(p => p.CreatedAt.Month)
             .Select(g => new
             {
-                Month   = g.Key,
+                Month = g.Key,
                 Revenue = g.Sum(p => p.Amount)
             })
             .ToListAsync(ct);
@@ -106,7 +105,7 @@ public class StatisticsService : IStatisticsService
             dict.TryGetValue(m, out var rev);
             result.Add(new RevenueByMonthItem
             {
-                Month   = m,
+                Month = m,
                 Revenue = rev
             });
         }
@@ -123,7 +122,7 @@ public class StatisticsService : IStatisticsService
         limit = limit <= 0 ? 5 : limit;
 
         var fromDate = from ?? DateTime.UtcNow.AddMonths(-12);
-        var toDate   = to   ?? DateTime.UtcNow;
+        var toDate = to ?? DateTime.UtcNow;
 
         var reservations = _context.Set<Reservation>().AsNoTracking()
             .Where(r =>
@@ -136,7 +135,7 @@ public class StatisticsService : IStatisticsService
 
         var hotels = _context.Set<Hotel>().AsNoTracking();
 
-        // Pull to memory – simpler and OK for project scale
+
         var rows = await (
             from r in reservations
             join h in hotels on r.HotelId equals h.Id
@@ -154,11 +153,11 @@ public class StatisticsService : IStatisticsService
             .GroupBy(x => new { x.Id, x.Name, x.Rating })
             .Select(g => new HotelStatsItem
             {
-                HotelId          = g.Key.Id,
-                HotelName        = g.Key.Name,
-                Rating           = (double)g.Key.Rating,
+                HotelId = g.Key.Id,
+                HotelName = g.Key.Name,
+                Rating = (double)g.Key.Rating,
                 ReservationsCount = g.Select(x => x.ReservationId).Distinct().Count(),
-                Revenue          = g.Sum(x => x.Revenue)
+                Revenue = g.Sum(x => x.Revenue)
             })
             .OrderByDescending(x => x.Revenue)
             .ThenByDescending(x => x.ReservationsCount)
@@ -177,7 +176,7 @@ public class StatisticsService : IStatisticsService
         limit = limit <= 0 ? 5 : limit;
 
         var fromDate = from ?? DateTime.UtcNow.AddMonths(-12);
-        var toDate   = to   ?? DateTime.UtcNow;
+        var toDate = to ?? DateTime.UtcNow;
 
         var reservations = _context.Set<Reservation>().AsNoTracking()
             .Where(r =>
@@ -215,13 +214,13 @@ public class StatisticsService : IStatisticsService
 
                 return new UserStatsItem
                 {
-                    UserId            = g.Key.Id,
-                    Email             = g.Key.Email,
-                    FullName          = g.Key.FullName,
+                    UserId = g.Key.Id,
+                    Email = g.Key.Email,
+                    FullName = g.Key.FullName,
                     ReservationsCount = reservationsList
                         .Select(r => r.ReservationId).Distinct().Count(),
-                    Revenue           = g.Sum(r => r.Revenue),
-                    Nights            = nights
+                    Revenue = g.Sum(r => r.Revenue),
+                    Nights = nights
                 };
             })
             .OrderByDescending(x => x.Revenue)

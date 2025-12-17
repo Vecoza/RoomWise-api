@@ -21,7 +21,7 @@ public sealed class ReviewsController : ControllerBase
         _reviews = reviews;
     }
 
-    // POST /api/reviews
+
     [HttpPost]
     public async Task<ActionResult<ReviewResponse>> Create(
         [FromBody] ReviewUpsertRequest req,
@@ -37,7 +37,7 @@ public sealed class ReviewsController : ControllerBase
         try
         {
             var created = await _reviews.CreateAsync(req, ct);
-            // Return the created review
+
             return CreatedAtAction(
                 nameof(HotelReviews),
                 new { id = created.HotelId, page = 0, pageSize = 10 },
@@ -46,12 +46,12 @@ public sealed class ReviewsController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            // Business rule errors → 400 with a clear message
+
             return BadRequest(new { message = ex.Message });
         }
     }
 
-    // GET /api/hotels/{id}/reviews?page=&pageSize=
+
     [HttpGet("/api/hotels/{id:int}/reviews")]
     [AllowAnonymous]
     public async Task<ActionResult<PagedResult<ReviewResponse>>> HotelReviews(

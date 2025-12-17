@@ -24,12 +24,12 @@ public class NotificationService : INotificationService
     {
         var entity = new Notification
         {
-            UserId        = request.UserId,
+            UserId = request.UserId,
             ReservationId = request.ReservationId,
-            Type          = request.Type,
-            Message       = request.Message,
-            IsRead        = false,
-            CreatedAt     = DateTime.UtcNow
+            Type = request.Type,
+            Message = request.Message,
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
         };
 
         _db.Set<Notification>().Add(entity);
@@ -46,7 +46,7 @@ public class NotificationService : INotificationService
         int pageSize,
         CancellationToken ct = default)
     {
-        page     = Math.Max(0, page);
+        page = Math.Max(0, page);
         pageSize = Math.Max(1, pageSize);
 
         var q = _db.Set<Notification>()
@@ -62,7 +62,7 @@ public class NotificationService : INotificationService
 
         return new PagedResult<NotificationResponse>
         {
-            Items      = items.Select(ToResponse).ToList(),
+            Items = items.Select(ToResponse).ToList(),
             TotalCount = total
         };
     }
@@ -98,7 +98,7 @@ public class NotificationService : INotificationService
             var subject = notification.Type switch
             {
                 "reservation_created" => "Your reservation was created",
-                "payment_succeeded"   => "Payment confirmed",
+                "payment_succeeded" => "Payment confirmed",
                 "reservation_reminder" => "Reservation reminder",
                 _ => "RoomWise notification"
             };
@@ -114,18 +114,18 @@ public class NotificationService : INotificationService
         }
         catch
         {
-            // swallow – queueing email should not block core flow
+
         }
     }
 
     private static NotificationResponse ToResponse(Notification n) => new()
     {
-        Id           = n.Id,
-        UserId       = n.UserId,
+        Id = n.Id,
+        UserId = n.UserId,
         ReservationId = n.ReservationId,
-        Type         = n.Type,
-        Message      = n.Message,
-        IsRead       = n.IsRead,
-        CreatedAt    = n.CreatedAt
+        Type = n.Type,
+        Message = n.Message,
+        IsRead = n.IsRead,
+        CreatedAt = n.CreatedAt
     };
 }

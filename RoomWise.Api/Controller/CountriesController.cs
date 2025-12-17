@@ -18,7 +18,7 @@ public sealed class CountriesController
         _cities = cities;
     }
 
-    // GET /api/countries/{countryId}/cities
+
     [HttpGet("{countryId:int}/cities")]
     public Task<PagedResult<CityResponse>> GetCities(int countryId, CancellationToken ct = default)
         => _cities.GetAsync(new CitySearchObject { CountryId = countryId, RetrieveAll = true });

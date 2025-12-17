@@ -16,7 +16,7 @@ internal sealed class BearerSecuritySchemeTransformer(Microsoft.AspNetCore.Authe
                 ["Bearer"] = new OpenApiSecurityScheme
                 {
                     Type = SecuritySchemeType.Http,
-                    Scheme = "bearer", 
+                    Scheme = "bearer",
                     In = ParameterLocation.Header,
                     BearerFormat = "Json Web Token"
                 }
@@ -31,10 +31,10 @@ internal sealed class BearerSecuritySchemeTransformer(Microsoft.AspNetCore.Authe
                     [new OpenApiSecurityScheme { Reference = new OpenApiReference { Id = "Bearer", Type = ReferenceType.SecurityScheme } }] = Array.Empty<string>()
                 });
             }*/
-            
+
             foreach (var (pathKey, pathItem) in document.Paths)
             {
-                // Skip auth-related paths (adjust to your routes)
+
                 if (pathKey.Contains("/api/Auth", StringComparison.OrdinalIgnoreCase))
                     continue;
 
@@ -44,9 +44,9 @@ internal sealed class BearerSecuritySchemeTransformer(Microsoft.AspNetCore.Authe
 
                     operation.Security.Add(new OpenApiSecurityRequirement
                     {
-                        [new OpenApiSecurityScheme 
-                        { 
-                            Reference = new OpenApiReference { Id = "Bearer", Type = ReferenceType.SecurityScheme } 
+                        [new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference { Id = "Bearer", Type = ReferenceType.SecurityScheme }
                         }] = Array.Empty<string>()
                     });
                 }

@@ -116,10 +116,9 @@ public sealed class HotelService
 				.ToListAsync();
 		}
 
-		// hotel ids in this result set
 		var hotelIds = hotels.Select(h => h.Id).ToList();
 
-		// aggregate ratings for these hotels
+
 		var ratingStats = await _context.Set<Review>()
 			.Where(r => hotelIds.Contains(r.HotelId))
 			.GroupBy(r => r.HotelId)
@@ -292,23 +291,23 @@ public sealed class HotelService
 				g => g.Select(x => x.Url).ToList()
 			);
 
-		// Tags for this hotel
+
 		var tags = await _context.Set<HotelTag>()
 			.Include(ht => ht.Tag)
 			.Where(ht => ht.HotelId == hotel.Id)
 			.Select(ht => new TagResponse { Id = ht.TagId, Name = ht.Tag.Name })
 			.ToListAsync();
 
-        // Promotion applicable to this hotel over the requested dates (or today)
-        var promoRangeStart = hasDates ? checkIn!.Value.Date : DateTime.UtcNow.Date;
-        var promoRangeEnd   = hasDates ? checkOut!.Value.Date : DateTime.UtcNow.Date;
-        var promo = await _context.Set<Promotion>()
-            .Where(p => p.IsActive
-                        && p.HotelId == hotel.Id
-                        && p.StartDate <= promoRangeEnd
-                        && p.EndDate >= promoRangeStart)
-            .OrderBy(p => p.EndDate)
-            .FirstOrDefaultAsync();
+
+		var promoRangeStart = hasDates ? checkIn!.Value.Date : DateTime.UtcNow.Date;
+		var promoRangeEnd = hasDates ? checkOut!.Value.Date : DateTime.UtcNow.Date;
+		var promo = await _context.Set<Promotion>()
+			.Where(p => p.IsActive
+						&& p.HotelId == hotel.Id
+						&& p.StartDate <= promoRangeEnd
+						&& p.EndDate >= promoRangeStart)
+			.OrderBy(p => p.EndDate)
+			.FirstOrDefaultAsync();
 
 		List<RoomRate> rates = new();
 		if (eligibleTypes.Count > 0)
@@ -342,11 +341,11 @@ public sealed class HotelService
 							&& checkIn!.Value < r.CheckOut)
 				.ToListAsync();
 		}
-        var details = new List<AvailableRoomType>();
-        foreach (var rt in eligibleTypes)
-        {
-            decimal nightly = rt.BasePrice;
-            if (rates.Count > 0)
+		var details = new List<AvailableRoomType>();
+		foreach (var rt in eligibleTypes)
+		{
+			decimal nightly = rt.BasePrice;
+			if (rates.Count > 0)
 			{
 				var rtRates = rates.Where(r => r.RoomTypeId == rt.Id);
 				if (hasDates)
@@ -372,42 +371,41 @@ public sealed class HotelService
 					var count = overlappingReservations.Count(r => r.RoomTypeId == rt.Id);
 					roomsLeft = Math.Max(0, rt.Stock - count);
 				}
-            }
+			}
 
-            imagesByRoomType.TryGetValue(rt.Id, out var urls);
-            var thumbnail = urls?.FirstOrDefault();
-            var originalNightly = nightly;
+			imagesByRoomType.TryGetValue(rt.Id, out var urls);
+			var thumbnail = urls?.FirstOrDefault();
+			var originalNightly = nightly;
 
-            // Apply promo if present
-            if (promo is not null)
-            {
-                if (promo.DiscountPercent.HasValue)
-                    nightly = nightly * (1 - promo.DiscountPercent.Value / 100m);
-                if (promo.DiscountFixed.HasValue)
-                    nightly = nightly - promo.DiscountFixed.Value;
-                if (nightly < 0) nightly = 0;
-            }
+			// Apply promo if present
+			if (promo is not null)
+			{
+				if (promo.DiscountPercent.HasValue)
+					nightly = nightly * (1 - promo.DiscountPercent.Value / 100m);
+				if (promo.DiscountFixed.HasValue)
+					nightly = nightly - promo.DiscountFixed.Value;
+				if (nightly < 0) nightly = 0;
+			}
 
-            details.Add(new AvailableRoomType
-            {
-                RoomTypeId = rt.Id,
-                Name = rt.Name,
-                Capacity = rt.Capacity,
-                NightlyPrice = nightly,
-                OriginalNightlyPrice = originalNightly,
-                RoomsLeft = roomsLeft,
+			details.Add(new AvailableRoomType
+			{
+				RoomTypeId = rt.Id,
+				Name = rt.Name,
+				Capacity = rt.Capacity,
+				NightlyPrice = nightly,
+				OriginalNightlyPrice = originalNightly,
+				RoomsLeft = roomsLeft,
 
-                // NEW fields:
-                ThumbnailUrl = thumbnail,
-                ImageUrls = urls ?? new List<string>(),
-                BedType = rt.BedType,
-                IsSmokingAllowed = rt.IsSmokingAllowed,
-                PromotionTitle = promo?.Title,
-                PromotionDiscountPercent = promo?.DiscountPercent,
-                PromotionDiscountFixed = promo?.DiscountFixed,
-                PromotionEndDate = promo?.EndDate
-            });
-        }
+				ThumbnailUrl = thumbnail,
+				ImageUrls = urls ?? new List<string>(),
+				BedType = rt.BedType,
+				IsSmokingAllowed = rt.IsSmokingAllowed,
+				PromotionTitle = promo?.Title,
+				PromotionDiscountPercent = promo?.DiscountPercent,
+				PromotionDiscountFixed = promo?.DiscountFixed,
+				PromotionEndDate = promo?.EndDate
+			});
+		}
 
 		result.AvailableRoomTypes = details;
 		result.Tags = tags;

@@ -24,7 +24,7 @@ public sealed class ReservationReminderService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // simple polling loop, every 15 minutes
+
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -50,14 +50,14 @@ public sealed class ReservationReminderService : BackgroundService
     private async Task RunOnceAsync(CancellationToken ct)
     {
         using var scope = _scopeFactory.CreateScope();
-        var db           = scope.ServiceProvider.GetRequiredService<DataContext>();
+        var db = scope.ServiceProvider.GetRequiredService<DataContext>();
         var notifications = scope.ServiceProvider.GetRequiredService<INotificationService>();
 
-        var today        = DateTime.UtcNow.Date;
-        var checkInDate  = today.AddDays(1); // remind 1 day BEFORE check-in
-        var checkOutDate = today.AddDays(1); // remind 1 day BEFORE check-out
+        var today = DateTime.UtcNow.Date;
+        var checkInDate = today.AddDays(1);
+        var checkOutDate = today.AddDays(1);
 
-        // 🔔 1) Check-in reminders: reservations starting tomorrow
+
         var upcomingCheckIns = await db.Set<Reservation>()
             .Where(r =>
                 r.Status == "Confirmed" &&
@@ -71,17 +71,17 @@ public sealed class ReservationReminderService : BackgroundService
             {
                 await notifications.CreateAsync(new NotificationCreateRequest
                 {
-                    UserId        = r.UserId,
+                    UserId = r.UserId,
                     ReservationId = r.Id,
-                    Type          = "checkin_reminder",
-                    Message       = $"Reminder: your stay at hotel {r.HotelId} starts on {r.CheckIn:yyyy-MM-dd}."
+                    Type = "checkin_reminder",
+                    Message = $"Reminder: your stay at hotel {r.HotelId} starts on {r.CheckIn:yyyy-MM-dd}."
                 }, ct);
             }
 
             r.CheckInReminderSent = true;
         }
 
-        // 🔔 2) Check-out reminders: reservations ending tomorrow
+
         var upcomingCheckOuts = await db.Set<Reservation>()
             .Where(r =>
                 r.Status == "Confirmed" &&
@@ -94,12 +94,12 @@ public sealed class ReservationReminderService : BackgroundService
             if (!string.IsNullOrWhiteSpace(r.UserId))
             {
                 await notifications.CreateAsync(new NotificationCreateRequest()
-                    
+
                 {
-                    UserId        = r.UserId,
+                    UserId = r.UserId,
                     ReservationId = r.Id,
-                    Type          = "checkout_reminder",
-                    Message       = $"Reminder: your stay (reservation {r.ConfirmationNumber}) ends on {r.CheckOut:yyyy-MM-dd}."
+                    Type = "checkout_reminder",
+                    Message = $"Reminder: your stay (reservation {r.ConfirmationNumber}) ends on {r.CheckOut:yyyy-MM-dd}."
                 }, ct);
             }
 

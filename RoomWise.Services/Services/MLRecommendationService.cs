@@ -40,7 +40,7 @@ public sealed class MLRecommendationService : IRecommendationService
     {
         top = Math.Max(1, top);
 
-        // Signals
+
         var interactedIds = await _db.Set<Wishlist>().Where(w => w.UserId == userId).Select(w => w.HotelId)
             .Concat(_db.Set<Reservation>().Where(r => r.UserId == userId).Select(r => r.HotelId))
             .Concat(_db.Set<Review>().Where(rv => rv.UserId == userId).Select(rv => rv.HotelId))
@@ -88,7 +88,7 @@ public sealed class MLRecommendationService : IRecommendationService
 
         if (interactedIds.Count == 0)
         {
-            // Cold start: top-rated, lowest price
+
             return hotels
                 .OrderByDescending(h => h.Rating)
                 .ThenBy(h => h.RoomTypes.OrderBy(rt => rt.BasePrice).FirstOrDefault()?.BasePrice ?? decimal.MaxValue)
@@ -97,7 +97,7 @@ public sealed class MLRecommendationService : IRecommendationService
                 .ToList();
         }
 
-        // Build user vector = mean of interacted hotel vectors
+
         var dim = hotelVectorMap.Values.FirstOrDefault()?.Length ?? 0;
         if (dim == 0) return Array.Empty<HotelSearchItemResponse>();
 
@@ -114,7 +114,7 @@ public sealed class MLRecommendationService : IRecommendationService
         if (count == 0) return Array.Empty<HotelSearchItemResponse>();
         for (int i = 0; i < dim; i++) userVec[i] /= count;
 
-        // Normalize userVec (L2)
+
         var norm = Math.Sqrt(userVec.Select(x => x * x).Sum());
         if (norm > 0)
         {
@@ -143,7 +143,7 @@ public sealed class MLRecommendationService : IRecommendationService
             .Select(x => x.hotel)
             .ToList();
 
-        // If the user has interacted with all hotels (or similarity produced no scores), fall back to top-rated.
+
         if (ranked.Count == 0)
         {
             ranked = hotels

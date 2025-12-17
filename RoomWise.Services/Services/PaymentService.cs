@@ -62,10 +62,10 @@ public class PaymentService
         if (baseAmount <= 0)
             throw new InvalidOperationException("Payment amount must be greater than zero.");
 
-        // Reservation totals already include auto-applied loyalty; do not redeem again
+
         var redeemPoints = 0;
         var amount = baseAmount;
-        // keep reservation total aligned with the payable amount
+
         reservation.Total = amount;
         await _context.SaveChangesAsync();
         if (amount <= 0)
@@ -226,14 +226,13 @@ public class PaymentService
 
         if (reservation is null) return;
 
-        // Apply loyalty redemption only after success
         if (pi.Metadata != null && pi.Metadata.TryGetValue("redeemPoints", out var redeemStr)
             && int.TryParse(redeemStr, out var redeemPoints) && redeemPoints > 0)
         {
             var balance = await _loyalty.GetBalanceAsync(reservation.UserId);
             if (balance < redeemPoints)
             {
-                // insufficient balance at settle time; skip redemption
+
                 redeemPoints = 0;
             }
             if (redeemPoints > 0)

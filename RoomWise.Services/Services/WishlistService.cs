@@ -47,7 +47,7 @@ public class WishlistService : IWishlistService
         var entity = await _context.Set<Wishlist>()
             .FirstOrDefaultAsync(w => w.UserId == userIdStr && w.HotelId == hotelId);
 
-        if (entity is null) return true; // idempotent
+        if (entity is null) return true;
 
         _context.Remove(entity);
         await _context.SaveChangesAsync();

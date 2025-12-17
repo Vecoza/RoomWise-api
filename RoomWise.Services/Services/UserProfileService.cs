@@ -32,18 +32,17 @@ public class UserProfileService : IUserProfileService
         UserProfileUpsertRequest req,
         CancellationToken ct = default)
     {
-        // ✅ 1) Make sure the identity user actually exists
+
         var userExists = await _db.Set<AppUser>()
                                   .AnyAsync(u => u.Id == userId, ct);
 
         if (!userExists)
         {
-            // This avoids FK violations on UserProfiles.UserId
+
             throw new InvalidOperationException(
                 $"Cannot create or update profile. User '{userId}' does not exist.");
         }
 
-        // ✅ 2) Normal upsert logic
         var entity = await _db.Set<UserProfile>()
                               .FirstOrDefaultAsync(p => p.UserId == userId, ct);
 
@@ -62,7 +61,7 @@ public class UserProfileService : IUserProfileService
                 UpdatedAt = DateTime.UtcNow
             };
 
-            _db.Set<UserProfile>().Add(entity); // may race with a parallel request
+            _db.Set<UserProfile>().Add(entity);
         }
         else
         {
@@ -80,7 +79,7 @@ public class UserProfileService : IUserProfileService
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException pg && pg.SqlState == PostgresErrorCodes.UniqueViolation)
         {
-            // Handle a rare race where another request created the profile first.
+
             var existing = await _db.Set<UserProfile>().FirstOrDefaultAsync(p => p.UserId == userId, ct);
             if (existing is null) throw;
             entity = existing;

@@ -48,7 +48,7 @@ public class AuthController : ControllerBase
         if (!createResult.Succeeded)
             return BadRequest(createResult.Errors);
 
-        // roles already exist from seeding
+
         await _userManager.AddToRoleAsync(user, AppRoles.Guest);
 
         var profile = new UserProfile
@@ -139,7 +139,7 @@ public class AuthController : ControllerBase
         var expires = DateTime.UtcNow.AddDays(30);
         var value = $"{refreshToken}|{expires:o}";
 
-        // store in AspNetUserTokens
+
         await _userManager.SetAuthenticationTokenAsync(user, "RoomWise", "RefreshToken", value);
         return (refreshToken, expires);
     }

@@ -17,7 +17,7 @@ public class OutboxMessage
     public string Type { get; set; } = null!;
 
     [Required]
-    public string Payload { get; set; } = null!; // JSON payload
+    public string Payload { get; set; } = null!;
 
     public DateTime CreatedAt { get; set; }
 

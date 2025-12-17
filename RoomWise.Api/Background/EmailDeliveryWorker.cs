@@ -10,9 +10,7 @@ using RoomWise.Model.Options;
 
 namespace RoomWise.Api.Background;
 
-/// <summary>
-/// Listens to RabbitMQ "email_notifications" queue and sends emails via SMTP.
-/// </summary>
+
 public sealed class EmailDeliveryWorker : BackgroundService
 {
     private readonly RabbitMqOptions _rabbit;
@@ -73,7 +71,7 @@ public sealed class EmailDeliveryWorker : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to process email message.");
-                // do not requeue to avoid infinite loop
+
                 channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: false);
             }
         };
@@ -83,7 +81,7 @@ public sealed class EmailDeliveryWorker : BackgroundService
             autoAck: false,
             consumer: consumer);
 
-        // Keep the loop alive until cancellation
+
         while (!ct.IsCancellationRequested)
         {
             Thread.Sleep(1000);
