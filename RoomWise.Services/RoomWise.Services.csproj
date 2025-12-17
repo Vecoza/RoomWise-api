@@ -24,6 +24,7 @@
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
       <PackageReference Include="Stripe.net" Version="49.3.0-alpha.1" />
       <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
+      <PackageReference Include="Microsoft.ML" Version="3.0.1" />
     </ItemGroup>
 
 </Project>
