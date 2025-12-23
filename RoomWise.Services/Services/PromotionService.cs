@@ -15,14 +15,22 @@ public class PromotionService
         IPromotionService
 {
     private readonly DbContext _db;
+    private int? _forcedHotelId;
 
     public PromotionService(DbContext db, IMapper mapper) : base(db, mapper)
     {
         _db = db;
     }
 
+    public void ForceHotelScope(int hotelId) => _forcedHotelId = hotelId;
+
     protected override IQueryable<Promotion> ApplyFilter(IQueryable<Promotion> q, PromotionSearchObject s)
     {
+        if (_forcedHotelId.HasValue)
+        {
+            s.HotelId = _forcedHotelId.Value;
+        }
+
         if (s.HotelId.HasValue) q = q.Where(x => x.HotelId == s.HotelId.Value);
         if (s.ActiveOnly == true) q = q.Where(x => x.IsActive);
         if (s.MinNightsGte.HasValue) q = q.Where(x => x.MinNights >= s.MinNightsGte.Value);

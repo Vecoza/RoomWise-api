@@ -12,10 +12,19 @@ public class AddOnService
     : BaseCRUDService<AddOnResponse, AddOnSearchObject, AddOn, AddOnUpsertRequest, AddOnUpsertRequest>,
       IAddOnService
 {
+    private int? _forcedHotelId;
+
     public AddOnService(DbContext context, IMapper mapper) : base(context, mapper) { }
+
+    public void ForceHotelScope(int hotelId) => _forcedHotelId = hotelId;
 
     protected override IQueryable<AddOn> ApplyFilter(IQueryable<AddOn> q, AddOnSearchObject s)
     {
+        if (_forcedHotelId.HasValue)
+        {
+            s.HotelId = _forcedHotelId.Value;
+        }
+
         if (s.HotelId.HasValue) q = q.Where(x => x.HotelId == s.HotelId.Value);
         if (s.IsActive.HasValue) q = q.Where(x => x.IsActive == s.IsActive.Value);
 

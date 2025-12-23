@@ -6,10 +6,9 @@ using RoomWise.Model.Requests;
 using RoomWise.Model.Responses;
 using RoomWise.Model.SearchObject;
 using RoomWise.Services.Interface;
+using RoomWise.Api.Auth;
 
 namespace RoomWise.Api.Controller;
-
-
 
 [ApiController]
 [Route("api/[controller]")]
@@ -19,12 +18,14 @@ public class ReservationsController
 {
     private readonly IReservationService _reservations;
     private readonly IPaymentService _payments;
+    private readonly HotelAdminScope _scope;
 
-    public ReservationsController(IReservationService reservations, IPaymentService payments)
+    public ReservationsController(IReservationService reservations, IPaymentService payments, HotelAdminScope scope)
         : base(reservations)
     {
         _reservations = reservations;
         _payments = payments;
+        _scope = scope;
     }
 
 
@@ -58,6 +59,41 @@ public class ReservationsController
     {
         await _reservations.CancelAsync(id, ct);
         return NoContent();
+    }
+
+    [Authorize(Roles = AppRoles.Administrator)]
+    public override Task<PagedResult<ReservationResponse>> Get([FromQuery] ReservationSearchObject? search = null)
+    {
+        return Filtered(async () => await base.Get(search));
+    }
+
+    [Authorize(Roles = AppRoles.Administrator)]
+    public override Task<ReservationResponse?> GetById(int id)
+    {
+        return Filtered(async () => await base.GetById(id));
+    }
+
+    [Authorize(Roles = AppRoles.Administrator)]
+    public override Task<ReservationResponse?> Update(int id, [FromBody] ReservationUpsertRequest req)
+    {
+        return Filtered(async () => await base.Update(id, req));
+    }
+
+    [Authorize(Roles = AppRoles.Administrator)]
+    public override Task<bool> Delete(int id)
+    {
+        return Filtered(async () =>
+        {
+            await _reservations.CancelAsAdminAsync(id, CancellationToken.None);
+            return true;
+        });
+    }
+
+    private async Task<T> Filtered<T>(Func<Task<T>> action)
+    {
+        var hotelId = await _scope.GetHotelIdAsync();
+        if (hotelId.HasValue) _reservations.ForceHotelScope(hotelId.Value);
+        return await action();
     }
 
 

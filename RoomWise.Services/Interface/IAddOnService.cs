@@ -8,4 +8,5 @@ namespace RoomWise.Services.Interface;
 public interface IAddOnService
     : ICRUDService<AddOnResponse, AddOnSearchObject, AddOnUpsertRequest, AddOnUpsertRequest>
 {
+    void ForceHotelScope(int hotelId);
 }

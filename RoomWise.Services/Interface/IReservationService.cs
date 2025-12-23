@@ -17,5 +17,7 @@ namespace RoomWise.Services.Interface
         Task<ReservationResponse?> GetByPublicIdAsync(Guid publicId, CancellationToken ct = default);
 
         Task<(PaymentResponse Payment, string ClientSecret)?> FindActivePaymentAsync(int reservationId);
+        void ForceHotelScope(int hotelId);
+        Task CancelAsAdminAsync(int id, CancellationToken ct);
     }
 }

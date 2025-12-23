@@ -12,10 +12,27 @@ public sealed class RoomRateService
     : BaseCRUDService<RoomRateResponse, RoomRateSearchObject, RoomRate, RoomRateRequest, RoomRateRequest>,
       IRoomRateService
 {
+    private int? _forcedHotelId;
+
     public RoomRateService(DbContext context, IMapper mapper) : base(context, mapper) { }
+
+    public void ForceHotelScope(int hotelId) => _forcedHotelId = hotelId;
 
     protected override IQueryable<RoomRate> ApplyFilter(IQueryable<RoomRate> q, RoomRateSearchObject s)
     {
+        if (_forcedHotelId.HasValue)
+        {
+            s.HotelId = _forcedHotelId.Value;
+        }
+
+        if (s.HotelId.HasValue)
+        {
+            var roomTypeIds = _context.Set<RoomType>()
+                .Where(rt => rt.HotelId == s.HotelId.Value)
+                .Select(rt => rt.Id);
+            q = q.Where(x => roomTypeIds.Contains(x.RoomTypeId));
+        }
+
         if (s.RoomTypeId.HasValue) q = q.Where(x => x.RoomTypeId == s.RoomTypeId.Value);
         if (s.Date.HasValue)
         {

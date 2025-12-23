@@ -13,10 +13,18 @@ public sealed class HotelImageService
     : BaseCRUDService<HotelImageResponse, HotelImageSearchObject, HotelImage, HotelImageUpsertRequest, HotelImageUpsertRequest>, IHotelImageService
 {
     private readonly DbContext _db;
+    private int? _forcedHotelId;
     public HotelImageService(DbContext db, IMapper mapper) : base(db, mapper) => _db = db;
+
+    public void ForceHotelScope(int hotelId) => _forcedHotelId = hotelId;
 
     protected override IQueryable<HotelImage> ApplyFilter(IQueryable<HotelImage> q, HotelImageSearchObject s)
     {
+        if (_forcedHotelId.HasValue)
+        {
+            s.HotelId = _forcedHotelId.Value;
+        }
+
         if (s.HotelId.HasValue) q = q.Where(x => x.HotelId == s.HotelId.Value);
         return q.OrderBy(x => x.SortOrder).ThenBy(x => x.Id);
     }
@@ -37,5 +45,13 @@ public sealed class HotelImageService
             e.SortOrder = item.SortOrder;
         }
         await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task<bool> ValidateHotelAsync(int hotelId, IList<int> imageIds, CancellationToken ct = default)
+    {
+        var count = await _db.Set<HotelImage>()
+            .Where(i => imageIds.Contains(i.Id) && i.HotelId == hotelId)
+            .CountAsync(ct);
+        return count == imageIds.Count;
     }
 }

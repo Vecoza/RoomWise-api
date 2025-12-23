@@ -11,4 +11,5 @@ public interface IPromotionService
         int? hotelId, DateTime checkIn, DateTime checkOut, decimal baseNightly, CancellationToken ct = default);
 
     Task<PromotionPreviewResponse> PreviewAsync(PromotionPreviewRequest req, CancellationToken ct = default);
+    void ForceHotelScope(int hotelId);
 }

@@ -40,6 +40,7 @@ public class DataContext : IdentityDbContext<AppUser>
     public DbSet<UserProfile> UserProfiles { get; set; }
     public DbSet<Wishlist> Wishlists { get; set; }
     public DbSet<LoyaltyPoint> LoyaltyPoints { get; set; }
+    public DbSet<HotelAdmin> HotelAdmins { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -158,6 +159,23 @@ public class DataContext : IdentityDbContext<AppUser>
             .HasOne(w => w.User)
             .WithMany()
             .HasForeignKey(w => w.UserId);
+
+        // HotelAdmin (1 admin per hotel)
+        builder.Entity<HotelAdmin>()
+            .HasOne(ha => ha.Hotel)
+            .WithMany()
+            .HasForeignKey(ha => ha.HotelId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<HotelAdmin>()
+            .HasOne(ha => ha.User)
+            .WithMany()
+            .HasForeignKey(ha => ha.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<HotelAdmin>()
+            .HasIndex(ha => ha.HotelId)
+            .IsUnique();
 
         builder.Entity<Wishlist>()
             .HasOne(w => w.Hotel)

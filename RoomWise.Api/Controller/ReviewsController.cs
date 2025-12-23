@@ -6,6 +6,8 @@ using RoomWise.Model.Requests;
 using RoomWise.Model.Responses;
 using RoomWise.Model.SearchObject;
 using RoomWise.Services.Interface;
+using RoomWise.Api.Auth;
+using RoomWise.Model;
 
 namespace RoomWise.Api.Controller;
 
@@ -15,10 +17,12 @@ namespace RoomWise.Api.Controller;
 public sealed class ReviewsController : ControllerBase
 {
     private readonly IReviewService _reviews;
+    private readonly HotelAdminScope _scope;
 
-    public ReviewsController(IReviewService reviews)
+    public ReviewsController(IReviewService reviews, HotelAdminScope scope)
     {
         _reviews = reviews;
+        _scope = scope;
     }
 
 
@@ -60,6 +64,8 @@ public sealed class ReviewsController : ControllerBase
         [FromQuery] int pageSize = 10,
         CancellationToken ct = default)
     {
+        var hotelId = await _scope.GetHotelIdAsync(ct);
+        if (hotelId.HasValue && hotelId.Value != id) return Forbid();
         var result = await _reviews.ListByHotelAsync(id, page, pageSize, ct);
         return Ok(result);
     }

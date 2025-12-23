@@ -13,14 +13,21 @@ public class ReviewService
     : BaseCRUDService<ReviewResponse, ReviewSearchObject, Review, ReviewUpsertRequest, ReviewUpsertRequest>, IReviewService
 {
     private readonly DbContext _ctx;
+    private int? _forcedHotelId;
 
     public ReviewService(DbContext ctx, IMapper mapper) : base(ctx, mapper)
     {
         _ctx = ctx;
     }
 
+    public void ForceHotelScope(int hotelId) => _forcedHotelId = hotelId;
+
     protected override IQueryable<Review> ApplyFilter(IQueryable<Review> q, ReviewSearchObject s)
     {
+        if (_forcedHotelId.HasValue)
+        {
+            s.HotelId = _forcedHotelId.Value;
+        }
         if (s.HotelId.HasValue) q = q.Where(x => x.HotelId == s.HotelId.Value);
         if (!string.IsNullOrWhiteSpace(s.UserId)) q = q.Where(x => x.UserId == s.UserId);
         if (s.MinRating.HasValue) q = q.Where(x => x.Rating >= s.MinRating.Value);

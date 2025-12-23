@@ -111,6 +111,9 @@ builder.Services.AddTransient<IFacilityService, FacilityService>();
 builder.Services.AddSingleton<IEmailQueueService, RabbitMqEmailQueueService>();
 builder.Services.AddHostedService<EmailDeliveryWorker>();
 builder.Services.AddTransient<IRecommendationService, MLRecommendationService>();
+builder.Services.AddTransient<IHotelAdminService, HotelAdminService>();
+builder.Services.AddScoped<HotelAdminScope>();
+builder.Services.AddTransient<IRoomTypeImageService, RoomTypeImageService>();
 
 
 builder.Services.AddHostedService<ReservationReminderService>();

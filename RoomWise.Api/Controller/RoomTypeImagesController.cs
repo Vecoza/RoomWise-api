@@ -1,39 +1,36 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RoomWise.Api.Auth;
+using RoomWise.Model;
 using RoomWise.Model.Requests;
 using RoomWise.Model.Responses;
 using RoomWise.Model.SearchObject;
 using RoomWise.Services.Interface;
-using RoomWise.Api.Auth;
 
 namespace RoomWise.Api.Controller;
 
 [ApiController]
 [Route("api/[controller]")]
-public class HotelImagesController
-    : BaseCRUDController<HotelImageResponse, HotelImageSearchObject, HotelImageUpsertRequest, HotelImageUpsertRequest>
+[Authorize(Roles = AppRoles.Administrator)]
+public sealed class RoomTypeImagesController
+    : BaseCRUDController<RoomTypeImageResponse, RoomTypeImageSearchObject, RoomTypeImageUpsertRequest, RoomTypeImageUpsertRequest>
 {
-    private readonly IHotelImageService _svc;
+    private readonly IRoomTypeImageService _svc;
     private readonly HotelAdminScope _scope;
-    public HotelImagesController(IHotelImageService svc, HotelAdminScope scope) : base(svc)
+
+    public RoomTypeImagesController(IRoomTypeImageService svc, HotelAdminScope scope) : base(svc)
     {
         _svc = svc;
         _scope = scope;
     }
 
     [HttpPut("reorder")]
-    public async Task<IActionResult> Reorder([FromBody] HotelImageReorderRequest req, CancellationToken ct)
+    public async Task<IActionResult> Reorder([FromBody] RoomTypeImageReorderRequest req, CancellationToken ct)
     {
         try
         {
-            var hotelId = await _scope.GetHotelIdAsync();
-            if (hotelId.HasValue)
-            {
-                var ids = req.Items.Select(i => i.Id).ToList();
-                var allowed = await _svc.ValidateHotelAsync(hotelId.Value, ids, ct);
-                if (!allowed) return Forbid();
-            }
-
+            var hotelId = await _scope.GetHotelIdAsync(ct);
+            if (hotelId.HasValue) _svc.ForceHotelScope(hotelId.Value);
             await _svc.ReorderAsync(req, ct);
             return NoContent();
         }
@@ -41,19 +38,23 @@ public class HotelImagesController
         {
             return BadRequest(new { message = ex.Message });
         }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
     }
 
-    public override Task<PagedResult<HotelImageResponse>> Get([FromQuery] HotelImageSearchObject? search = null)
+    public override Task<PagedResult<RoomTypeImageResponse>> Get([FromQuery] RoomTypeImageSearchObject? search = null)
     {
         return Scope(() => base.Get(search));
     }
 
-    public override Task<HotelImageResponse> Create([FromBody] HotelImageUpsertRequest req)
+    public override Task<RoomTypeImageResponse> Create([FromBody] RoomTypeImageUpsertRequest req)
     {
         return Scope(() => base.Create(req));
     }
 
-    public override Task<HotelImageResponse?> Update(int id, [FromBody] HotelImageUpsertRequest req)
+    public override Task<RoomTypeImageResponse?> Update(int id, [FromBody] RoomTypeImageUpsertRequest req)
     {
         return Scope(() => base.Update(id, req));
     }

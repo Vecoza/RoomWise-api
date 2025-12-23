@@ -13,4 +13,5 @@ public interface IRoomAvailabilityService
     Task EnsureRangeConfiguredAsync(int roomTypeId, DateTime checkIn, DateTime checkOut, CancellationToken ct = default);
     Task<bool> TryConsumeRangeAsync(int roomTypeId, DateTime checkIn, DateTime checkOut, CancellationToken ct = default);
     Task RestoreRangeAsync(int roomTypeId, DateTime checkIn, DateTime checkOut, CancellationToken ct = default);
+    void ForceHotelScope(int hotelId);
 }

@@ -21,6 +21,7 @@ public sealed class ReservationService
     private readonly INotificationService _notifications;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILoyaltyService _loyalty;
+    private int? _forcedHotelId;
 
     public ReservationService(
         DbContext context,
@@ -37,9 +38,15 @@ public sealed class ReservationService
         _loyalty = loyalty;
     }
 
+    public void ForceHotelScope(int hotelId) => _forcedHotelId = hotelId;
 
     protected override IQueryable<Reservation> ApplyFilter(IQueryable<Reservation> q, ReservationSearchObject s)
     {
+        if (_forcedHotelId.HasValue)
+        {
+            s.HotelId = _forcedHotelId.Value;
+        }
+
         if (!string.IsNullOrWhiteSpace(s.UserId))
             q = q.Where(x => x.UserId == s.UserId);
 
@@ -264,6 +271,16 @@ public sealed class ReservationService
 
     public async Task CancelAsync(int id, CancellationToken ct)
     {
+        await CancelInternalAsync(id, allowAdminOverride: false, ct);
+    }
+
+    public async Task CancelAsAdminAsync(int id, CancellationToken ct)
+    {
+        await CancelInternalAsync(id, allowAdminOverride: true, ct);
+    }
+
+    private async Task CancelInternalAsync(int id, bool allowAdminOverride, CancellationToken ct)
+    {
         var userId = _httpContextAccessor.HttpContext?
         .User
         .FindFirstValue(ClaimTypes.NameIdentifier);
@@ -277,7 +294,7 @@ public sealed class ReservationService
         if (reservation is null)
             throw new KeyNotFoundException($"Reservation {id} not found.");
 
-        if (!string.Equals(reservation.UserId, userId, StringComparison.OrdinalIgnoreCase))
+        if (!allowAdminOverride && !string.Equals(reservation.UserId, userId, StringComparison.OrdinalIgnoreCase))
             throw new UnauthorizedAccessException("You do not own this reservation.");
 
         if (reservation.Status == "Cancelled")

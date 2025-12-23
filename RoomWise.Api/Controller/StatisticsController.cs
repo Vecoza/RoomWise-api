@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RoomWise.Model;
 using RoomWise.Model.Responses;
 using RoomWise.Services.Interface;
+using RoomWise.Api.Auth;
 
 namespace RoomWise.Api.Controller;
 
@@ -12,39 +13,53 @@ namespace RoomWise.Api.Controller;
 public sealed class StatisticsController : ControllerBase
 {
     private readonly IStatisticsService _stats;
+    private readonly HotelAdminScope _scope;
 
-    public StatisticsController(IStatisticsService stats)
+    public StatisticsController(IStatisticsService stats, HotelAdminScope scope)
     {
         _stats = stats;
+        _scope = scope;
     } 
 
 
     [HttpGet("overview")]
-    public Task<AdminStatsOverviewResponse> Overview(CancellationToken ct)
-        => _stats.GetOverviewAsync(ct);
+    public async Task<AdminStatsOverviewResponse> Overview(CancellationToken ct)
+    {
+        var hotelId = await _scope.GetHotelIdAsync(ct);
+        return await _stats.GetOverviewAsync(hotelId, ct);
+    }
 
    
     [HttpGet("revenue-by-month")]
-    public Task<IReadOnlyList<RevenueByMonthItem>> RevenueByMonth(
+    public async Task<IReadOnlyList<RevenueByMonthItem>> RevenueByMonth(
         [FromQuery] int year,
         CancellationToken ct)
-        => _stats.GetRevenueByMonthAsync(year, ct);
+    {
+        var hotelId = await _scope.GetHotelIdAsync(ct);
+        return await _stats.GetRevenueByMonthAsync(year, hotelId, ct);
+    }
 
-    
+   
     [HttpGet("top-hotels")]
-    public Task<IReadOnlyList<HotelStatsItem>> TopHotels(
+    public async Task<IReadOnlyList<HotelStatsItem>> TopHotels(
         [FromQuery] int limit = 5,
         [FromQuery] DateTime? from = null,
         [FromQuery] DateTime? to = null,
         CancellationToken ct = default)
-        => _stats.GetTopHotelsAsync(limit, from, to, ct);
+    {
+        var hotelId = await _scope.GetHotelIdAsync(ct);
+        return await _stats.GetTopHotelsAsync(limit, from, to, hotelId, ct);
+    }
 
     
     [HttpGet("top-users")]
-    public Task<IReadOnlyList<UserStatsItem>> TopUsers(
+    public async Task<IReadOnlyList<UserStatsItem>> TopUsers(
         [FromQuery] int limit = 5,
         [FromQuery] DateTime? from = null,
         [FromQuery] DateTime? to = null,
         CancellationToken ct = default)
-        => _stats.GetTopUsersAsync(limit, from, to, ct);
+    {
+        var hotelId = await _scope.GetHotelIdAsync(ct);
+        return await _stats.GetTopUsersAsync(limit, from, to, hotelId, ct);
+    }
 }

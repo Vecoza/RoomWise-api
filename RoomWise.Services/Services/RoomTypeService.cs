@@ -13,10 +13,19 @@ public sealed class RoomTypeService
   : BaseCRUDService<RoomTypeResponse, RoomTypeSearchObject, RoomType, RoomTypeUpsertRequest, RoomTypeUpsertRequest>,
     IRoomTypeService
 {
+    private int? _forcedHotelId;
+
     public RoomTypeService(DbContext context, IMapper mapper) : base(context, mapper) { }
+
+    public void ForceHotelScope(int hotelId) => _forcedHotelId = hotelId;
 
     protected override IQueryable<RoomType> ApplyFilter(IQueryable<RoomType> q, RoomTypeSearchObject s)
     {
+        if (_forcedHotelId.HasValue)
+        {
+            s.HotelId = _forcedHotelId.Value;
+        }
+
         if (s.HotelId.HasValue) q = q.Where(x => x.HotelId == s.HotelId.Value);
         if (!string.IsNullOrWhiteSpace(s.Name)) q = q.Where(x => x.Name.Contains(s.Name));
         if (!string.IsNullOrWhiteSpace(s.BedType)) q = q.Where(x => x.BedType == s.BedType);

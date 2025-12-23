@@ -11,7 +11,7 @@ public class StatisticsService : IStatisticsService
 
     public StatisticsService(DbContext context) => _context = context;
 
-    public async Task<AdminStatsOverviewResponse> GetOverviewAsync(CancellationToken ct = default)
+    public async Task<AdminStatsOverviewResponse> GetOverviewAsync(int? hotelId = null, CancellationToken ct = default)
     {
         var reservations = _context.Set<Reservation>().AsNoTracking();
         var payments = _context.Set<Payment>().AsNoTracking()
@@ -19,9 +19,27 @@ public class StatisticsService : IStatisticsService
         var users = _context.Set<AppUser>().AsNoTracking();
         var roomTypes = _context.Set<RoomType>().AsNoTracking();
 
+        if (hotelId.HasValue)
+        {
+            reservations = reservations.Where(r => r.HotelId == hotelId.Value);
+            var reservationIds = reservations.Select(r => r.Id);
+            payments = payments.Where(p => reservationIds.Contains(p.ReservationId));
+            roomTypes = roomTypes.Where(rt => rt.HotelId == hotelId.Value);
+        }
+
         var totalReservations = await reservations.CountAsync(ct);
-        var totalRevenue = await payments.SumAsync(p => (decimal?)p.Amount, ct) ?? 0m;
-        var totalUsers = await users.CountAsync(ct);
+        decimal totalRevenue;
+        if (hotelId.HasValue)
+        {
+            totalRevenue = await reservations.SumAsync(r => (decimal?)r.Total, ct) ?? 0m;
+        }
+        else
+        {
+            totalRevenue = await payments.SumAsync(p => (decimal?)p.Amount, ct) ?? 0m;
+        }
+        var totalUsers = hotelId.HasValue
+            ? await reservations.Select(r => r.UserId).Distinct().CountAsync(ct)
+            : await users.CountAsync(ct);
 
 
         var stays = await reservations
@@ -81,23 +99,41 @@ public class StatisticsService : IStatisticsService
 
     public async Task<IReadOnlyList<RevenueByMonthItem>> GetRevenueByMonthAsync(
         int year,
+        int? hotelId = null,
         CancellationToken ct = default)
     {
         if (year <= 0) year = DateTime.UtcNow.Year;
 
-        var payments = _context.Set<Payment>().AsNoTracking()
-            .Where(p => p.Status == "Succeeded" && p.CreatedAt.Year == year);
+        var grouped = new List<KeyValuePair<int, decimal>>();
 
-        var grouped = await payments
-            .GroupBy(p => p.CreatedAt.Month)
-            .Select(g => new
-            {
-                Month = g.Key,
-                Revenue = g.Sum(p => p.Amount)
-            })
-            .ToListAsync(ct);
+        if (hotelId.HasValue)
+        {
+            var reservations = _context.Set<Reservation>().AsNoTracking()
+                .Where(r => r.HotelId == hotelId.Value
+                            && r.CreatedAt.Year == year
+                            && r.Status != "Cancelled");
 
-        var dict = grouped.ToDictionary(x => x.Month, x => x.Revenue);
+            grouped = (await reservations
+                .GroupBy(r => r.CreatedAt.Month)
+                .Select(g => new { Month = g.Key, Revenue = g.Sum(r => r.Total) })
+                .ToListAsync(ct))
+                .Select(x => new KeyValuePair<int, decimal>(x.Month, x.Revenue))
+                .ToList();
+        }
+        else
+        {
+            var payments = _context.Set<Payment>().AsNoTracking()
+                .Where(p => p.Status == "Succeeded" && p.CreatedAt.Year == year);
+
+            grouped = (await payments
+                .GroupBy(p => p.CreatedAt.Month)
+                .Select(g => new { Month = g.Key, Revenue = g.Sum(p => p.Amount) })
+                .ToListAsync(ct))
+                .Select(x => new KeyValuePair<int, decimal>(x.Month, x.Revenue))
+                .ToList();
+        }
+
+        var dict = grouped.ToDictionary(x => x.Key, x => x.Value);
 
         var result = new List<RevenueByMonthItem>(12);
         for (int m = 1; m <= 12; m++)
@@ -117,6 +153,7 @@ public class StatisticsService : IStatisticsService
         int limit,
         DateTime? from = null,
         DateTime? to = null,
+        int? hotelId = null,
         CancellationToken ct = default)
     {
         limit = limit <= 0 ? 5 : limit;
@@ -129,6 +166,11 @@ public class StatisticsService : IStatisticsService
                 r.CreatedAt >= fromDate &&
                 r.CreatedAt <= toDate &&
                 r.Status != "Cancelled");
+
+        if (hotelId.HasValue)
+        {
+            reservations = reservations.Where(r => r.HotelId == hotelId.Value);
+        }
 
         var payments = _context.Set<Payment>().AsNoTracking()
             .Where(p => p.Status == "Succeeded");
@@ -171,6 +213,7 @@ public class StatisticsService : IStatisticsService
         int limit,
         DateTime? from = null,
         DateTime? to = null,
+        int? hotelId = null,
         CancellationToken ct = default)
     {
         limit = limit <= 0 ? 5 : limit;
@@ -183,6 +226,11 @@ public class StatisticsService : IStatisticsService
                 r.CreatedAt >= fromDate &&
                 r.CreatedAt <= toDate &&
                 r.Status != "Cancelled");
+
+        if (hotelId.HasValue)
+        {
+            reservations = reservations.Where(r => r.HotelId == hotelId.Value);
+        }
 
         var payments = _context.Set<Payment>().AsNoTracking()
             .Where(p => p.Status == "Succeeded");

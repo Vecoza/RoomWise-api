@@ -5,6 +5,7 @@ using RoomWise.Model.Requests;
 using RoomWise.Model.Responses;
 using RoomWise.Model.SearchObject;
 using RoomWise.Services.Interface;
+using RoomWise.Api.Auth;
 
 namespace RoomWise.Api.Controller;
 
@@ -15,11 +16,13 @@ public class HotelsController
 	: BaseCRUDController<HotelResponse, HotelSearchObject, HotelUpsertRequest, HotelUpsertRequest>
 {
 	private readonly IHotelService _hotelService;
+    private readonly HotelAdminScope _scope;
 
-	public HotelsController(IHotelService hotelService)
-		: base(hotelService)
-	{
-		_hotelService = hotelService;
+    public HotelsController(IHotelService hotelService, HotelAdminScope scope)
+        : base(hotelService)
+    {
+        _hotelService = hotelService;
+        _scope = scope;
 	}
 
 
@@ -54,4 +57,22 @@ public class HotelsController
 		var hotelService = (IHotelService)_service;
 		return await hotelService.GetHotDealsAsync(page, pageSize, ct);
 	}
+
+    [Authorize(Roles = AppRoles.Administrator)]
+    [HttpGet("{id:int}")]
+    public override async Task<HotelResponse?> GetById(int id)
+    {
+        var hotelId = await _scope.GetHotelIdAsync();
+        if (hotelId.HasValue && hotelId.Value != id) return null;
+        return await base.GetById(id);
+    }
+
+    [Authorize(Roles = AppRoles.Administrator)]
+    [HttpPut("{id:int}")]
+    public override async Task<HotelResponse?> Update(int id, [FromBody] HotelUpsertRequest req)
+    {
+        var hotelId = await _scope.GetHotelIdAsync();
+        if (hotelId.HasValue && hotelId.Value != id) return null;
+        return await base.Update(id, req);
+    }
 }

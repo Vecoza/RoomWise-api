@@ -119,6 +119,49 @@ END$$;";
             await ResetIdentityAsync("Hotels");
         }
 
+        // Hotel administrators (one per hotel)
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        if (!await roleManager.RoleExistsAsync(AppRoles.Administrator))
+        {
+            await roleManager.CreateAsync(new IdentityRole(AppRoles.Administrator));
+        }
+
+        var hotels = await ctx.Hotels.AsNoTracking().ToListAsync();
+        foreach (var hotel in hotels)
+        {
+            var adminEmail = $"admin{hotel.Id}@roomwise.com";
+            var adminUser = await userManager.FindByEmailAsync(adminEmail);
+            if (adminUser is null)
+            {
+                adminUser = new AppUser
+                {
+                    UserName = adminEmail,
+                    Email = adminEmail
+                };
+                var res = await userManager.CreateAsync(adminUser, "HotelAdmin123!");
+                if (!res.Succeeded)
+                    throw new InvalidOperationException("Failed to create hotel admin user: " +
+                        string.Join(",", res.Errors.Select(e => e.Description)));
+            }
+
+            if (!await userManager.IsInRoleAsync(adminUser, AppRoles.Administrator))
+            {
+                await userManager.AddToRoleAsync(adminUser, AppRoles.Administrator);
+            }
+
+            var existing = await ctx.HotelAdmins.FirstOrDefaultAsync(ha => ha.HotelId == hotel.Id);
+            if (existing is null)
+            {
+                ctx.HotelAdmins.Add(new HotelAdmin
+                {
+                    HotelId = hotel.Id,
+                    UserId = adminUser.Id,
+                    CreatedAt = DateTime.UtcNow
+                });
+                await ctx.SaveChangesAsync();
+            }
+        }
+
         // 2) ROOM TYPES
         if (!await ctx.RoomTypes.AnyAsync())
         {

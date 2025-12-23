@@ -6,4 +6,6 @@ namespace RoomWise.Services.Interface;
 
 public interface IRoomRateService
     : ICRUDService<RoomRateResponse, RoomRateSearchObject, RoomRateRequest, RoomRateRequest>
-{ }
+{
+    void ForceHotelScope(int hotelId);
+}
