@@ -41,6 +41,7 @@ public class DataContext : IdentityDbContext<AppUser>
     public DbSet<Wishlist> Wishlists { get; set; }
     public DbSet<LoyaltyPoint> LoyaltyPoints { get; set; }
     public DbSet<HotelAdmin> HotelAdmins { get; set; }
+    public DbSet<EmailVerification> EmailVerifications { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -332,6 +333,18 @@ public class DataContext : IdentityDbContext<AppUser>
             .HasOne(n => n.Reservation)
             .WithMany()
             .HasForeignKey(n => n.ReservationId);
+
+        // ---------------------------
+        // Email Verification
+        // ---------------------------
+        builder.Entity<EmailVerification>()
+            .HasOne(ev => ev.User)
+            .WithMany()
+            .HasForeignKey(ev => ev.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<EmailVerification>()
+            .HasIndex(ev => new { ev.UserId, ev.Email });
 
         // ---------------------------
         // Promotions

@@ -35,6 +35,13 @@ END$$;";
             }
         }
 
+        async Task EnsureEmailConfirmedAsync(AppUser user)
+        {
+            if (user.EmailConfirmed) return;
+            user.EmailConfirmed = true;
+            await userManager.UpdateAsync(user);
+        }
+
         // 0) DEMO GUEST USER
         var demoEmail = "vecaTest@gmail.com";
         var demoUser = await userManager.FindByEmailAsync(demoEmail);
@@ -53,6 +60,8 @@ END$$;";
 
             await userManager.AddToRoleAsync(demoUser, AppRoles.Guest);
         }
+
+        await EnsureEmailConfirmedAsync(demoUser);
 
         var demoUserId = demoUser.Id;
 
@@ -148,6 +157,8 @@ END$$;";
             {
                 await userManager.AddToRoleAsync(adminUser, AppRoles.Administrator);
             }
+
+            await EnsureEmailConfirmedAsync(adminUser);
 
             var existing = await ctx.HotelAdmins.FirstOrDefaultAsync(ha => ha.HotelId == hotel.Id);
             if (existing is null)

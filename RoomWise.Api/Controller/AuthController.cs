@@ -1,11 +1,16 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
+using System.Text;
 using RoomWise.Api.Auth;
 using RoomWise.Api.Data;
 using RoomWise.Model;
 using RoomWise.Model.Requests;
+using RoomWise.Model.Messaging;
+using RoomWise.Services.Interface;
 
 namespace RoomWise.Api.Controller;
 
@@ -18,17 +23,20 @@ public class AuthController : ControllerBase
     private readonly SignInManager<AppUser> _signInManager;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly DataContext _context;
+    private readonly IEmailQueueService _emailQueue;
 
     public AuthController(
         UserManager<AppUser> userManager,
         SignInManager<AppUser> signInManager,
         IJwtTokenService jwtTokenService,
-        DataContext context)
+        DataContext context,
+        IEmailQueueService emailQueue)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _jwtTokenService = jwtTokenService;
         _context = context;
+        _emailQueue = emailQueue;
     }
 
     [HttpPost("register")]
@@ -66,6 +74,8 @@ public class AuthController : ControllerBase
         _context.UserProfiles.Add(profile);
         await _context.SaveChangesAsync();
 
+        await SendVerificationEmailAsync(user, request.Email, CancellationToken.None);
+
         return NoContent();
     }
 
@@ -79,6 +89,9 @@ public class AuthController : ControllerBase
         var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: false);
         if (!result.Succeeded) return Unauthorized("Invalid email or password.");
 
+        if (!user.EmailConfirmed)
+            return StatusCode(StatusCodes.Status403Forbidden, "Email not verified.");
+
         var token = await _jwtTokenService.CreateTokenAsync(user);
         var (refreshToken, refreshExpiresUtc) = await IssueRefreshTokenAsync(user);
 
@@ -91,6 +104,61 @@ public class AuthController : ControllerBase
             refreshExpiresUtc,
             roles
         });
+    }
+
+    [HttpPost("request-email-verification")]
+    [AllowAnonymous]
+    public async Task<IActionResult> RequestEmailVerification(
+        [FromBody] RequestEmailVerificationRequest request,
+        CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email))
+            return BadRequest("Email is required.");
+
+        var user = await _userManager.FindByEmailAsync(request.Email);
+        if (user is null) return NoContent();
+
+        if (user.EmailConfirmed) return NoContent();
+
+        var sent = await SendVerificationEmailAsync(user, request.Email, ct);
+        if (!sent) return StatusCode(StatusCodes.Status429TooManyRequests, "Please wait before requesting a new code.");
+
+        return NoContent();
+    }
+
+    [HttpPost("verify-email")]
+    [AllowAnonymous]
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Code))
+            return BadRequest("Email and code are required.");
+
+        var user = await _userManager.FindByEmailAsync(request.Email);
+        if (user is null) return BadRequest("Invalid or expired code.");
+
+        var now = DateTime.UtcNow;
+        var record = await _context.Set<EmailVerification>()
+            .Where(ev => ev.UserId == user.Id && ev.Email == request.Email && ev.VerifiedAt == null)
+            .OrderByDescending(ev => ev.CreatedAt)
+            .FirstOrDefaultAsync(ct);
+
+        if (record is null || record.ExpiresAt <= now)
+            return BadRequest("Invalid or expired code.");
+
+        var hash = HashCode(request.Code);
+        if (!string.Equals(record.CodeHash, hash, StringComparison.Ordinal))
+        {
+            record.AttemptCount += 1;
+            await _context.SaveChangesAsync(ct);
+            return BadRequest("Invalid or expired code.");
+        }
+
+        record.VerifiedAt = now;
+        user.EmailConfirmed = true;
+        await _userManager.UpdateAsync(user);
+        await _context.SaveChangesAsync(ct);
+
+        return Ok(new { message = "Email verified." });
     }
 
     [HttpPost("refresh")]
@@ -142,5 +210,61 @@ public class AuthController : ControllerBase
 
         await _userManager.SetAuthenticationTokenAsync(user, "RoomWise", "RefreshToken", value);
         return (refreshToken, expires);
+    }
+
+    private async Task<bool> SendVerificationEmailAsync(AppUser user, string email, CancellationToken ct)
+    {
+        var now = DateTime.UtcNow;
+        var existing = await _context.Set<EmailVerification>()
+            .FirstOrDefaultAsync(ev => ev.UserId == user.Id && ev.Email == email && ev.VerifiedAt == null, ct);
+
+        if (existing?.LastSentAt is not null && existing.LastSentAt.Value.AddSeconds(60) > now)
+            return false;
+
+        var code = GenerateCode();
+        var codeHash = HashCode(code);
+
+        if (existing is null)
+        {
+            existing = new EmailVerification
+            {
+                UserId = user.Id,
+                Email = email
+            };
+            _context.Set<EmailVerification>().Add(existing);
+        }
+
+        existing.CodeHash = codeHash;
+        existing.ExpiresAt = now.AddMinutes(15);
+        existing.CreatedAt = now;
+        existing.AttemptCount = 0;
+        existing.LastSentAt = now;
+
+        await _context.SaveChangesAsync(ct);
+
+        await _emailQueue.PublishAsync(new EmailMessage
+        {
+            To = email,
+            Subject = "RoomWise email verification",
+            Body = $"Your verification code is {code}. It expires in 15 minutes.",
+            UserId = user.Id
+        }, ct);
+
+        return true;
+    }
+
+    private static string GenerateCode()
+    {
+        var bytes = new byte[4];
+        RandomNumberGenerator.Fill(bytes);
+        var value = BitConverter.ToUInt32(bytes, 0) % 1000000;
+        return value.ToString("D6");
+    }
+
+    private static string HashCode(string code)
+    {
+        var bytes = Encoding.UTF8.GetBytes(code);
+        var hash = SHA256.HashData(bytes);
+        return Convert.ToHexString(hash);
     }
 }

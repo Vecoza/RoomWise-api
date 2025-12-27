@@ -45,8 +45,13 @@ public static class IdentitySeedExtensions
             {
                 await userManager.AddToRoleAsync(adminUser, AppRoles.Administrator);
             }
+
+            if (!adminUser.EmailConfirmed)
+            {
+                adminUser.EmailConfirmed = true;
+                await userManager.UpdateAsync(adminUser);
+            }
         }
     }
 }
-
 

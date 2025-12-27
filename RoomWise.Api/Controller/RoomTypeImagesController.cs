@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.IO;
 using RoomWise.Api.Auth;
 using RoomWise.Model;
 using RoomWise.Model.Requests;
@@ -42,6 +44,41 @@ public sealed class RoomTypeImagesController
         {
             return Forbid();
         }
+    }
+
+    [HttpPost("upload")]
+    public async Task<ActionResult<RoomTypeImageResponse>> Upload(
+        [FromForm] IFormFile? file,
+        [FromForm] int roomTypeId,
+        [FromForm] int? sortOrder,
+        CancellationToken ct)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { message = "No file uploaded." });
+
+        if (!file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            return BadRequest(new { message = "Only image files are allowed." });
+
+        var hotelId = await _scope.GetHotelIdAsync(ct);
+        if (hotelId.HasValue)
+        {
+            _svc.ForceHotelScope(hotelId.Value);
+            var allowed = await _svc.ValidateRoomTypeAsync(hotelId.Value, roomTypeId, ct);
+            if (!allowed) return Forbid();
+        }
+
+        await using var ms = new MemoryStream();
+        await file.CopyToAsync(ms, ct);
+        var base64 = Convert.ToBase64String(ms.ToArray());
+
+        var created = await _svc.CreateAsync(new RoomTypeImageUpsertRequest
+        {
+            RoomTypeId = roomTypeId,
+            Url = base64,
+            SortOrder = sortOrder ?? 0
+        });
+
+        return Ok(created);
     }
 
     public override Task<PagedResult<RoomTypeImageResponse>> Get([FromQuery] RoomTypeImageSearchObject? search = null)

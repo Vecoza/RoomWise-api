@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.IO;
+using RoomWise.Model;
 using RoomWise.Model.Requests;
 using RoomWise.Model.Responses;
 using RoomWise.Model.SearchObject;
@@ -41,6 +44,42 @@ public class HotelImagesController
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    [Authorize(Roles = AppRoles.Administrator)]
+    [HttpPost("upload")]
+    public async Task<ActionResult<HotelImageResponse>> Upload(
+        [FromForm] IFormFile? file,
+        [FromForm] int? sortOrder,
+        [FromForm] int? hotelId,
+        CancellationToken ct)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { message = "No file uploaded." });
+
+        if (!file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            return BadRequest(new { message = "Only image files are allowed." });
+
+        var scopedHotelId = await _scope.GetHotelIdAsync(ct);
+        var targetHotelId = scopedHotelId ?? hotelId;
+        if (!targetHotelId.HasValue)
+            return BadRequest(new { message = "HotelId is required." });
+
+        if (scopedHotelId.HasValue)
+            _svc.ForceHotelScope(scopedHotelId.Value);
+
+        await using var ms = new MemoryStream();
+        await file.CopyToAsync(ms, ct);
+        var base64 = Convert.ToBase64String(ms.ToArray());
+
+        var created = await _svc.CreateAsync(new HotelImageUpsertRequest
+        {
+            HotelId = targetHotelId.Value,
+            Url = base64,
+            SortOrder = sortOrder ?? 0
+        });
+
+        return Ok(created);
     }
 
     public override Task<PagedResult<HotelImageResponse>> Get([FromQuery] HotelImageSearchObject? search = null)
