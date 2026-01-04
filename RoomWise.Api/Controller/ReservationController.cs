@@ -68,6 +68,21 @@ public class ReservationsController
     }
 
     [Authorize(Roles = AppRoles.Administrator)]
+    [HttpGet("arrivals")]
+    public async Task<ActionResult<IReadOnlyList<ReservationArrivalResponse>>> Arrivals(
+        [FromQuery] DateTime? date,
+        CancellationToken ct = default)
+    {
+        var hotelId = await _scope.GetHotelIdAsync(ct);
+        if (!hotelId.HasValue) return Forbid();
+
+        _reservations.ForceHotelScope(hotelId.Value);
+
+        var result = await _reservations.GetArrivalsAsync(date?.Date ?? DateTime.UtcNow.Date, ct);
+        return Ok(result);
+    }
+
+    [Authorize(Roles = AppRoles.Administrator)]
     public override Task<ReservationResponse?> GetById(int id)
     {
         return Filtered(async () => await base.GetById(id));
@@ -120,14 +135,17 @@ public class ReservationsController
             });
         }
 
+        var preRedeemTotal = reservation.Subtotal + reservation.TaxesAndFees + reservation.ServiceFee;
+        var redeemApplied = (int)Math.Max(0m, preRedeemTotal - reservation.Total);
+
         (PaymentResponse payment, string clientSecret) = await _payments.CreatePaymentIntentAsync(
              new PaymentCreateRequest
              {
                  ReservationId = reservation.Id,
-                 Amount = reservation.Subtotal,
+                 Amount = reservation.Total,
                  Currency = reservation.Currency,
                  Provider = "Stripe",
-                 LoyaltyPointsToRedeem = request.LoyaltyPointsToRedeem
+                 LoyaltyPointsToRedeem = redeemApplied
              }
          );
 

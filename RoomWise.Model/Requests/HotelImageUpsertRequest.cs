@@ -7,7 +7,7 @@ public class HotelImageUpsertRequest
     [Required]
     public int HotelId { get; set; }
 
-    [Required, MaxLength(400)]
+    [Required]
     public string Url { get; set; } = "";
 
     public int SortOrder { get; set; } = 0;

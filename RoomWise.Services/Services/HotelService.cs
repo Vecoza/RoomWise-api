@@ -261,7 +261,7 @@ public sealed class HotelService
 				HotelId = a.HotelId,
 				Name = a.Name,
 				Description = a.Description,
-				PricingModel = a.PricingModel,   // "PerNight" / "PerGuestPerNight" / "PerStay"
+				PricingModel = a.PricingModel,
 				Price = a.Price,
 				Currency = a.Currency,
 				IsActive = a.IsActive

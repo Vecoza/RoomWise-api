@@ -109,7 +109,7 @@ public sealed class EmailDeliveryWorker : BackgroundService
             From = new MailAddress(_smtp.FromEmail, _smtp.FromDisplayName),
             Subject = msg.Subject,
             Body = msg.Body,
-            IsBodyHtml = false
+            IsBodyHtml = msg.IsHtml
         };
         mail.To.Add(msg.To);
 

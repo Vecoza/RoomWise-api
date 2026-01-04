@@ -24,57 +24,61 @@ public class AuthController : ControllerBase
     private readonly IJwtTokenService _jwtTokenService;
     private readonly DataContext _context;
     private readonly IEmailQueueService _emailQueue;
+    private readonly IPasswordHasher<AppUser> _passwordHasher;
 
     public AuthController(
         UserManager<AppUser> userManager,
         SignInManager<AppUser> signInManager,
         IJwtTokenService jwtTokenService,
         DataContext context,
-        IEmailQueueService emailQueue)
+        IEmailQueueService emailQueue,
+        IPasswordHasher<AppUser> passwordHasher)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _jwtTokenService = jwtTokenService;
         _context = context;
         _emailQueue = emailQueue;
+        _passwordHasher = passwordHasher;
     }
 
     [HttpPost("register")]
     [AllowAnonymous]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
-        var existing = await _userManager.FindByEmailAsync(request.Email);
+        var email = NormalizeEmail(request.Email);
+        if (string.IsNullOrWhiteSpace(email)) return BadRequest("Email is required.");
+
+        var existing = await _userManager.FindByEmailAsync(email);
         if (existing is not null) return Conflict("Email already registered.");
 
-        var user = new AppUser
+        var tempUser = new AppUser
         {
-            UserName = request.Email,
-            Email = request.Email
+            UserName = email,
+            Email = email
         };
 
-        var createResult = await _userManager.CreateAsync(user, request.Password);
-        if (!createResult.Succeeded)
-            return BadRequest(createResult.Errors);
+        var passwordErrors = await ValidatePasswordAsync(tempUser, request.Password);
+        if (passwordErrors.Count > 0) return BadRequest(passwordErrors);
 
+        var pending = await _context.Set<PendingRegistration>()
+            .FirstOrDefaultAsync(p => p.Email == email);
 
-        await _userManager.AddToRoleAsync(user, AppRoles.Guest);
-
-        var profile = new UserProfile
+        if (pending is null)
         {
-            UserId = user.Id,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            AvatarUrl = null,
-            PreferredLanguage = "en",
-            LoyaltyBalance = 0,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+            pending = new PendingRegistration
+            {
+                Email = email
+            };
+            _context.Set<PendingRegistration>().Add(pending);
+        }
 
-        _context.UserProfiles.Add(profile);
-        await _context.SaveChangesAsync();
+        pending.PasswordHash = _passwordHasher.HashPassword(tempUser, request.Password);
+        pending.FirstName = request.FirstName;
+        pending.LastName = request.LastName;
+        pending.CreatedAt = DateTime.UtcNow;
 
-        await SendVerificationEmailAsync(user, request.Email, CancellationToken.None);
+        await IssuePendingCodeAsync(pending, CancellationToken.None);
 
         return NoContent();
     }
@@ -83,8 +87,18 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var user = await _userManager.FindByEmailAsync(request.Email);
-        if (user is null) return Unauthorized("Invalid email or password.");
+        var email = NormalizeEmail(request.Email);
+        if (string.IsNullOrWhiteSpace(email)) return Unauthorized("Invalid email or password.");
+
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+        {
+            var pending = await _context.Set<PendingRegistration>()
+                .AnyAsync(p => p.Email == email);
+            if (pending)
+                return StatusCode(StatusCodes.Status403Forbidden, "Email not verified.");
+            return Unauthorized("Invalid email or password.");
+        }
 
         var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: false);
         if (!result.Succeeded) return Unauthorized("Invalid email or password.");
@@ -112,16 +126,19 @@ public class AuthController : ControllerBase
         [FromBody] RequestEmailVerificationRequest request,
         CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(request.Email))
+        var email = NormalizeEmail(request.Email);
+        if (string.IsNullOrWhiteSpace(email))
             return BadRequest("Email is required.");
 
-        var user = await _userManager.FindByEmailAsync(request.Email);
-        if (user is null) return NoContent();
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is not null && user.EmailConfirmed) return NoContent();
 
-        if (user.EmailConfirmed) return NoContent();
+        var pending = await _context.Set<PendingRegistration>()
+            .FirstOrDefaultAsync(p => p.Email == email, ct);
 
-        var sent = await SendVerificationEmailAsync(user, request.Email, ct);
-        if (!sent) return StatusCode(StatusCodes.Status429TooManyRequests, "Please wait before requesting a new code.");
+        if (pending is null) return NoContent();
+
+        await IssuePendingCodeAsync(pending, ct);
 
         return NoContent();
     }
@@ -130,32 +147,56 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Code))
+        var email = NormalizeEmail(request.Email);
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(request.Code))
             return BadRequest("Email and code are required.");
 
-        var user = await _userManager.FindByEmailAsync(request.Email);
-        if (user is null) return BadRequest("Invalid or expired code.");
+        var pending = await _context.Set<PendingRegistration>()
+            .FirstOrDefaultAsync(p => p.Email == email, ct);
+
+        if (pending is null)
+            return BadRequest("Invalid or expired code.");
 
         var now = DateTime.UtcNow;
-        var record = await _context.Set<EmailVerification>()
-            .Where(ev => ev.UserId == user.Id && ev.Email == request.Email && ev.VerifiedAt == null)
-            .OrderByDescending(ev => ev.CreatedAt)
-            .FirstOrDefaultAsync(ct);
-
-        if (record is null || record.ExpiresAt <= now)
+        if (pending.CodeExpiresAt <= now)
             return BadRequest("Invalid or expired code.");
 
         var hash = HashCode(request.Code);
-        if (!string.Equals(record.CodeHash, hash, StringComparison.Ordinal))
+        if (!string.Equals(pending.CodeHash, hash, StringComparison.Ordinal))
         {
-            record.AttemptCount += 1;
+            pending.AttemptCount += 1;
             await _context.SaveChangesAsync(ct);
             return BadRequest("Invalid or expired code.");
         }
 
-        record.VerifiedAt = now;
-        user.EmailConfirmed = true;
-        await _userManager.UpdateAsync(user);
+        var user = new AppUser
+        {
+            UserName = email,
+            Email = email,
+            EmailConfirmed = true,
+            PasswordHash = pending.PasswordHash
+        };
+
+        var createResult = await _userManager.CreateAsync(user);
+        if (!createResult.Succeeded)
+            return BadRequest(createResult.Errors);
+
+        await _userManager.AddToRoleAsync(user, AppRoles.Guest);
+
+        var profile = new UserProfile
+        {
+            UserId = user.Id,
+            FirstName = pending.FirstName,
+            LastName = pending.LastName,
+            AvatarUrl = null,
+            PreferredLanguage = "en",
+            LoyaltyBalance = 0,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        _context.UserProfiles.Add(profile);
+        _context.Set<PendingRegistration>().Remove(pending);
         await _context.SaveChangesAsync(ct);
 
         return Ok(new { message = "Email verified." });
@@ -212,45 +253,38 @@ public class AuthController : ControllerBase
         return (refreshToken, expires);
     }
 
-    private async Task<bool> SendVerificationEmailAsync(AppUser user, string email, CancellationToken ct)
+    private async Task IssuePendingCodeAsync(PendingRegistration pending, CancellationToken ct)
     {
         var now = DateTime.UtcNow;
-        var existing = await _context.Set<EmailVerification>()
-            .FirstOrDefaultAsync(ev => ev.UserId == user.Id && ev.Email == email && ev.VerifiedAt == null, ct);
-
-        if (existing?.LastSentAt is not null && existing.LastSentAt.Value.AddSeconds(60) > now)
-            return false;
-
         var code = GenerateCode();
-        var codeHash = HashCode(code);
-
-        if (existing is null)
-        {
-            existing = new EmailVerification
-            {
-                UserId = user.Id,
-                Email = email
-            };
-            _context.Set<EmailVerification>().Add(existing);
-        }
-
-        existing.CodeHash = codeHash;
-        existing.ExpiresAt = now.AddMinutes(15);
-        existing.CreatedAt = now;
-        existing.AttemptCount = 0;
-        existing.LastSentAt = now;
+        pending.CodeHash = HashCode(code);
+        pending.CodeExpiresAt = now.AddMinutes(15);
+        pending.AttemptCount = 0;
+        pending.LastSentAt = now;
 
         await _context.SaveChangesAsync(ct);
 
+        var body = new StringBuilder()
+            .AppendLine("Welcome to RoomWise!")
+            .AppendLine()
+            .AppendLine("Please verify your email address using the code below:")
+            .AppendLine()
+            .AppendLine($"  {code}")
+            .AppendLine()
+            .AppendLine("This code expires in 15 minutes.")
+            .AppendLine("If you didn't request this, you can safely ignore this email.")
+            .AppendLine()
+            .AppendLine("Thanks,")
+            .AppendLine("RoomWise Team")
+            .ToString();
+
         await _emailQueue.PublishAsync(new EmailMessage
         {
-            To = email,
+            To = pending.Email,
             Subject = "RoomWise email verification",
-            Body = $"Your verification code is {code}. It expires in 15 minutes.",
-            UserId = user.Id
+            Body = body,
+            UserId = null
         }, ct);
-
-        return true;
     }
 
     private static string GenerateCode()
@@ -266,5 +300,20 @@ public class AuthController : ControllerBase
         var bytes = Encoding.UTF8.GetBytes(code);
         var hash = SHA256.HashData(bytes);
         return Convert.ToHexString(hash);
+    }
+
+    private static string NormalizeEmail(string? email)
+        => (email ?? string.Empty).Trim().ToLowerInvariant();
+
+    private async Task<List<IdentityError>> ValidatePasswordAsync(AppUser user, string password)
+    {
+        var errors = new List<IdentityError>();
+        foreach (var validator in _userManager.PasswordValidators)
+        {
+            var result = await validator.ValidateAsync(_userManager, user, password);
+            if (!result.Succeeded)
+                errors.AddRange(result.Errors);
+        }
+        return errors;
     }
 }

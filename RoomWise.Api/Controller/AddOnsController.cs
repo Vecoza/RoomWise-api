@@ -23,7 +23,7 @@ public sealed class AddOnsController
         _scope = scope;
     }
 
-    [Authorize(Roles = AppRoles.Administrator)]
+    [AllowAnonymous]
     public override Task<PagedResult<AddOnResponse>> Get([FromQuery] AddOnSearchObject? search = null)
     {
         return Filtered(async () => await base.Get(search));

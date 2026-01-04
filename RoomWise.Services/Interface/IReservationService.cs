@@ -12,6 +12,8 @@ namespace RoomWise.Services.Interface
 
         Task<PagedResult<ReservationResponse>> GetMyAsync(string userId, string? category);
 
+        Task<IReadOnlyList<ReservationArrivalResponse>> GetArrivalsAsync(DateTime date, CancellationToken ct);
+
 
         new Task<ReservationResponse> CreateAsync(ReservationUpsertRequest request);
         Task<ReservationResponse?> GetByPublicIdAsync(Guid publicId, CancellationToken ct = default);

@@ -65,4 +65,10 @@ public sealed class RoomTypeImageService
         }
         await _db.SaveChangesAsync(ct);
     }
+
+    public async Task<bool> ValidateRoomTypeAsync(int hotelId, int roomTypeId, CancellationToken ct = default)
+    {
+        return await _db.Set<RoomType>()
+            .AnyAsync(rt => rt.Id == roomTypeId && rt.HotelId == hotelId, ct);
+    }
 }

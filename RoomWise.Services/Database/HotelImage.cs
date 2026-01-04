@@ -11,7 +11,8 @@ public class HotelImage
     [ForeignKey(nameof(Hotel))]
     public int HotelId { get; set; }
 
-    [Required, MaxLength(400)]
+    [Required]
+    [Column(TypeName = "text")]
     public string Url { get; set; } = null!;
 
     public int SortOrder { get; set; } = 0;

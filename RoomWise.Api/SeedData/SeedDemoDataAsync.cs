@@ -122,6 +122,116 @@ END$$;";
                     Rating = 4,
                     ReviewCount = 0,
                     CreatedAt = DateTime.UtcNow
+                },
+                new Hotel
+                {
+                    Id = 5,
+                    Name = "Old Town Sarajevo Suites",
+                    Description = "Boutique suites near the historic bazaar with modern comforts.",
+                    CityId = sarajevoId,
+                    AddressLine = "Ferhadija 21",
+                    Rating = 4,
+                    ReviewCount = 0,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Hotel
+                {
+                    Id = 6,
+                    Name = "Riverstone Mostar Boutique",
+                    Description = "Cozy riverside hotel with views of the old bridge.",
+                    CityId = mostarId,
+                    AddressLine = "Rade Bitange 4",
+                    Rating = 4,
+                    ReviewCount = 0,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Hotel
+                {
+                    Id = 7,
+                    Name = "Green Hills Sarajevo Resort",
+                    Description = "Resort-style stay with wellness center and panoramic city views.",
+                    CityId = sarajevoId,
+                    AddressLine = "Trebevic 7",
+                    Rating = 5,
+                    ReviewCount = 0,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Hotel
+                {
+                    Id = 8,
+                    Name = "Neretva Garden Mostar",
+                    Description = "Quiet retreat with garden courtyard and river walks nearby.",
+                    CityId = mostarId,
+                    AddressLine = "Mala Tepa 9",
+                    Rating = 4,
+                    ReviewCount = 0,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Hotel
+                {
+                    Id = 9,
+                    Name = "Sarajevo Skyline Hotel",
+                    Description = "Modern high-rise hotel with business amenities and city views.",
+                    CityId = sarajevoId,
+                    AddressLine = "Zmaja od Bosne 12",
+                    Rating = 4,
+                    ReviewCount = 0,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Hotel
+                {
+                    Id = 10,
+                    Name = "Mostar Heritage Inn",
+                    Description = "Traditional stone inn steps away from the old town.",
+                    CityId = mostarId,
+                    AddressLine = "Kujundziluk 3",
+                    Rating = 5,
+                    ReviewCount = 0,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Hotel
+                {
+                    Id = 11,
+                    Name = "Bascarsija Courtyard Hotel",
+                    Description = "Charming courtyard hotel in the heart of the old city.",
+                    CityId = sarajevoId,
+                    AddressLine = "Kazandziluk 18",
+                    Rating = 4,
+                    ReviewCount = 0,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Hotel
+                {
+                    Id = 12,
+                    Name = "Stari Most Riverside",
+                    Description = "Riverside stay with terrace dining and sunset views.",
+                    CityId = mostarId,
+                    AddressLine = "Ricanova 5",
+                    Rating = 5,
+                    ReviewCount = 0,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Hotel
+                {
+                    Id = 13,
+                    Name = "Sarajevo Business Hub",
+                    Description = "Business-focused hotel with meeting rooms and fast Wi-Fi.",
+                    CityId = sarajevoId,
+                    AddressLine = "Hamdije Kresevljakovica 34",
+                    Rating = 4,
+                    ReviewCount = 0,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Hotel
+                {
+                    Id = 14,
+                    Name = "Mostar Panorama Lodge",
+                    Description = "Hillside lodge with panoramic views of the valley.",
+                    CityId = mostarId,
+                    AddressLine = "Kneza Domagoja 2",
+                    Rating = 4,
+                    ReviewCount = 0,
+                    CreatedAt = DateTime.UtcNow
                 }
             );
             await ctx.SaveChangesAsync();
@@ -280,6 +390,266 @@ END$$;";
                     Currency = "EUR",
                     Stock = 3,
                     CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 9,
+                    HotelId = 5,
+                    Name = "Classic Double",
+                    BedType = "Queen",
+                    Capacity = 2,
+                    IsSmokingAllowed = false,
+                    BasePrice = 100m,
+                    Currency = "EUR",
+                    Stock = 10,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 10,
+                    HotelId = 5,
+                    Name = "Family Suite",
+                    BedType = "King + Sofa",
+                    Capacity = 4,
+                    IsSmokingAllowed = false,
+                    BasePrice = 170m,
+                    Currency = "EUR",
+                    Stock = 5,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 11,
+                    HotelId = 6,
+                    Name = "Standard Twin",
+                    BedType = "Twin",
+                    Capacity = 2,
+                    IsSmokingAllowed = false,
+                    BasePrice = 80m,
+                    Currency = "EUR",
+                    Stock = 8,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 12,
+                    HotelId = 6,
+                    Name = "River Suite",
+                    BedType = "King",
+                    Capacity = 3,
+                    IsSmokingAllowed = false,
+                    BasePrice = 150m,
+                    Currency = "EUR",
+                    Stock = 4,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 13,
+                    HotelId = 7,
+                    Name = "Garden Double",
+                    BedType = "Queen",
+                    Capacity = 2,
+                    IsSmokingAllowed = false,
+                    BasePrice = 110m,
+                    Currency = "EUR",
+                    Stock = 10,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 14,
+                    HotelId = 7,
+                    Name = "Wellness Suite",
+                    BedType = "King",
+                    Capacity = 3,
+                    IsSmokingAllowed = false,
+                    BasePrice = 190m,
+                    Currency = "EUR",
+                    Stock = 4,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 15,
+                    HotelId = 8,
+                    Name = "Courtyard Double",
+                    BedType = "Queen",
+                    Capacity = 2,
+                    IsSmokingAllowed = false,
+                    BasePrice = 90m,
+                    Currency = "EUR",
+                    Stock = 9,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 16,
+                    HotelId = 8,
+                    Name = "Panorama Suite",
+                    BedType = "King",
+                    Capacity = 3,
+                    IsSmokingAllowed = false,
+                    BasePrice = 160m,
+                    Currency = "EUR",
+                    Stock = 3,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 17,
+                    HotelId = 9,
+                    Name = "City Double",
+                    BedType = "Queen",
+                    Capacity = 2,
+                    IsSmokingAllowed = false,
+                    BasePrice = 110m,
+                    Currency = "EUR",
+                    Stock = 12,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 18,
+                    HotelId = 9,
+                    Name = "Executive Suite",
+                    BedType = "King",
+                    Capacity = 3,
+                    IsSmokingAllowed = false,
+                    BasePrice = 200m,
+                    Currency = "EUR",
+                    Stock = 4,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 19,
+                    HotelId = 10,
+                    Name = "Heritage Double",
+                    BedType = "Queen",
+                    Capacity = 2,
+                    IsSmokingAllowed = false,
+                    BasePrice = 100m,
+                    Currency = "EUR",
+                    Stock = 8,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 20,
+                    HotelId = 10,
+                    Name = "Stone Suite",
+                    BedType = "King",
+                    Capacity = 3,
+                    IsSmokingAllowed = false,
+                    BasePrice = 180m,
+                    Currency = "EUR",
+                    Stock = 3,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 21,
+                    HotelId = 11,
+                    Name = "Bazaar Double",
+                    BedType = "Queen",
+                    Capacity = 2,
+                    IsSmokingAllowed = false,
+                    BasePrice = 90m,
+                    Currency = "EUR",
+                    Stock = 10,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 22,
+                    HotelId = 11,
+                    Name = "Courtyard Suite",
+                    BedType = "King",
+                    Capacity = 3,
+                    IsSmokingAllowed = false,
+                    BasePrice = 170m,
+                    Currency = "EUR",
+                    Stock = 4,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 23,
+                    HotelId = 12,
+                    Name = "Riverside Double",
+                    BedType = "Queen",
+                    Capacity = 2,
+                    IsSmokingAllowed = false,
+                    BasePrice = 100m,
+                    Currency = "EUR",
+                    Stock = 9,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 24,
+                    HotelId = 12,
+                    Name = "Bridge View Suite",
+                    BedType = "King",
+                    Capacity = 3,
+                    IsSmokingAllowed = false,
+                    BasePrice = 190m,
+                    Currency = "EUR",
+                    Stock = 3,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 25,
+                    HotelId = 13,
+                    Name = "Business Double",
+                    BedType = "Queen",
+                    Capacity = 2,
+                    IsSmokingAllowed = false,
+                    BasePrice = 120m,
+                    Currency = "EUR",
+                    Stock = 12,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 26,
+                    HotelId = 13,
+                    Name = "Conference Suite",
+                    BedType = "King",
+                    Capacity = 3,
+                    IsSmokingAllowed = false,
+                    BasePrice = 210m,
+                    Currency = "EUR",
+                    Stock = 4,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 27,
+                    HotelId = 14,
+                    Name = "Lodge Double",
+                    BedType = "Queen",
+                    Capacity = 2,
+                    IsSmokingAllowed = false,
+                    BasePrice = 100m,
+                    Currency = "EUR",
+                    Stock = 8,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new RoomType
+                {
+                    Id = 28,
+                    HotelId = 14,
+                    Name = "Panorama Family",
+                    BedType = "King + Sofa",
+                    Capacity = 4,
+                    IsSmokingAllowed = false,
+                    BasePrice = 180m,
+                    Currency = "EUR",
+                    Stock = 4,
+                    CreatedAt = DateTime.UtcNow
                 }
             );
             await ctx.SaveChangesAsync();
@@ -316,7 +686,67 @@ END$$;";
                         new RoomTypeImage { Id = 14, RoomTypeId = 7, Url = "https://symphony.cdn.tambourine.com/menger-hotel-redesign/media/menger-hotel-gallery-10-5d37218c27264.jpg", SortOrder = 2 },
 
                         new RoomTypeImage { Id = 15, RoomTypeId = 8, Url = "https://www.millenniumhotels.com/mhb-media/new-destinations/eu-and-uk/united-kingdom/millennium-hotel-london-knightsbridge/rooms/kni---1280-x-568-signature.auto?rev=a31a67ec245542b2b93e9595b35f5df6", SortOrder = 1 },
-                        new RoomTypeImage { Id = 16, RoomTypeId = 8, Url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFG2pVGkRMV-Cqb4HAS1dS9RsFF3Ii-Tf2Xg&s", SortOrder = 2 }
+                        new RoomTypeImage { Id = 16, RoomTypeId = 8, Url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFG2pVGkRMV-Cqb4HAS1dS9RsFF3Ii-Tf2Xg&s", SortOrder = 2 },
+
+                        // Hotel 5 room types
+                        new RoomTypeImage { Id = 17, RoomTypeId = 9, Url = "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 18, RoomTypeId = 9, Url = "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+                        new RoomTypeImage { Id = 19, RoomTypeId = 10, Url = "https://images.unsplash.com/photo-1501117716987-c8e1ecb2101e?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 20, RoomTypeId = 10, Url = "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+
+                        // Hotel 6 room types
+                        new RoomTypeImage { Id = 21, RoomTypeId = 11, Url = "https://images.unsplash.com/photo-1505691723518-36a5ac3be353?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 22, RoomTypeId = 11, Url = "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+                        new RoomTypeImage { Id = 23, RoomTypeId = 12, Url = "https://images.unsplash.com/photo-1444201983204-c43cbd584d93?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 24, RoomTypeId = 12, Url = "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+
+                        // Hotel 7 room types
+                        new RoomTypeImage { Id = 25, RoomTypeId = 13, Url = "https://images.unsplash.com/photo-1501876725168-00c445821c9e?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 26, RoomTypeId = 13, Url = "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+                        new RoomTypeImage { Id = 27, RoomTypeId = 14, Url = "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 28, RoomTypeId = 14, Url = "https://images.unsplash.com/photo-1501117716987-c8e1ecb2101e?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+
+                        // Hotel 8 room types
+                        new RoomTypeImage { Id = 29, RoomTypeId = 15, Url = "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 30, RoomTypeId = 15, Url = "https://images.unsplash.com/photo-1505691723518-36a5ac3be353?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+                        new RoomTypeImage { Id = 31, RoomTypeId = 16, Url = "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 32, RoomTypeId = 16, Url = "https://images.unsplash.com/photo-1444201983204-c43cbd584d93?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+
+                        // Hotel 9 room types
+                        new RoomTypeImage { Id = 33, RoomTypeId = 17, Url = "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 34, RoomTypeId = 17, Url = "https://images.unsplash.com/photo-1501876725168-00c445821c9e?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+                        new RoomTypeImage { Id = 35, RoomTypeId = 18, Url = "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 36, RoomTypeId = 18, Url = "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+
+                        // Hotel 10 room types
+                        new RoomTypeImage { Id = 37, RoomTypeId = 19, Url = "https://images.unsplash.com/photo-1501117716987-c8e1ecb2101e?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 38, RoomTypeId = 19, Url = "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+                        new RoomTypeImage { Id = 39, RoomTypeId = 20, Url = "https://images.unsplash.com/photo-1505691723518-36a5ac3be353?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 40, RoomTypeId = 20, Url = "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+
+                        // Hotel 11 room types
+                        new RoomTypeImage { Id = 41, RoomTypeId = 21, Url = "https://images.unsplash.com/photo-1444201983204-c43cbd584d93?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 42, RoomTypeId = 21, Url = "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+                        new RoomTypeImage { Id = 43, RoomTypeId = 22, Url = "https://images.unsplash.com/photo-1501876725168-00c445821c9e?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 44, RoomTypeId = 22, Url = "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+
+                        // Hotel 12 room types
+                        new RoomTypeImage { Id = 45, RoomTypeId = 23, Url = "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 46, RoomTypeId = 23, Url = "https://images.unsplash.com/photo-1501117716987-c8e1ecb2101e?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+                        new RoomTypeImage { Id = 47, RoomTypeId = 24, Url = "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 48, RoomTypeId = 24, Url = "https://images.unsplash.com/photo-1505691723518-36a5ac3be353?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+
+                        // Hotel 13 room types
+                        new RoomTypeImage { Id = 49, RoomTypeId = 25, Url = "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 50, RoomTypeId = 25, Url = "https://images.unsplash.com/photo-1444201983204-c43cbd584d93?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+                        new RoomTypeImage { Id = 51, RoomTypeId = 26, Url = "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 52, RoomTypeId = 26, Url = "https://images.unsplash.com/photo-1501876725168-00c445821c9e?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+
+                        // Hotel 14 room types
+                        new RoomTypeImage { Id = 53, RoomTypeId = 27, Url = "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 54, RoomTypeId = 27, Url = "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 },
+                        new RoomTypeImage { Id = 55, RoomTypeId = 28, Url = "https://images.unsplash.com/photo-1501117716987-c8e1ecb2101e?auto=format&fit=crop&w=1200&q=80", SortOrder = 1 },
+                        new RoomTypeImage { Id = 56, RoomTypeId = 28, Url = "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=1200&q=80", SortOrder = 2 }
                     );
 
             await ctx.SaveChangesAsync();
@@ -333,7 +763,7 @@ END$$;";
                     RoomTypeId = 1,
                     StartDate = new DateTime(2025, 11, 1),
                     EndDate = new DateTime(2025, 11, 30),
-                    Price = 85m,
+                    Price = 90m,
                     Currency = "EUR"
                 },
                 new RoomRate
@@ -351,7 +781,7 @@ END$$;";
                     RoomTypeId = 3,
                     StartDate = new DateTime(2025, 11, 1),
                     EndDate = new DateTime(2025, 11, 30),
-                    Price = 75m,
+                    Price = 80m,
                     Currency = "EUR"
                 },
                 new RoomRate
@@ -397,6 +827,186 @@ END$$;";
                     StartDate = new DateTime(2025, 12, 1),
                     EndDate = new DateTime(2026, 03, 31),
                     Price = 210m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 9,
+                    RoomTypeId = 9,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 100m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 10,
+                    RoomTypeId = 10,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 180m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 11,
+                    RoomTypeId = 11,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 90m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 12,
+                    RoomTypeId = 12,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 160m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 13,
+                    RoomTypeId = 13,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 120m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 14,
+                    RoomTypeId = 14,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 200m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 15,
+                    RoomTypeId = 15,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 90m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 16,
+                    RoomTypeId = 16,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 170m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 17,
+                    RoomTypeId = 17,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 110m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 18,
+                    RoomTypeId = 18,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 210m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 19,
+                    RoomTypeId = 19,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 100m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 20,
+                    RoomTypeId = 20,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 180m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 21,
+                    RoomTypeId = 21,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 100m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 22,
+                    RoomTypeId = 22,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 170m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 23,
+                    RoomTypeId = 23,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 110m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 24,
+                    RoomTypeId = 24,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 190m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 25,
+                    RoomTypeId = 25,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 130m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 26,
+                    RoomTypeId = 26,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 220m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 27,
+                    RoomTypeId = 27,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 110m,
+                    Currency = "EUR"
+                },
+                new RoomRate
+                {
+                    Id = 28,
+                    RoomTypeId = 28,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    Price = 190m,
                     Currency = "EUR"
                 }
             );
@@ -502,11 +1112,11 @@ END$$;";
             await ResetIdentityAsync("HotelFacilities", "HotelId");
         }
 
-        // 6) ROOM AVAILABILITY (Nov–Dec 2025)
+        // 6) ROOM AVAILABILITY (Nov 2025–Jan 2026)
         if (!await ctx.RoomAvailabilities.AnyAsync())
         {
             var start = new DateTime(2025, 11, 1);
-            var end = new DateTime(2025, 12, 31);
+            var end = new DateTime(2026, 1, 31);
 
             var roomTypesSeed = await ctx.RoomTypes.AsNoTracking().Select(rt => new { rt.Id, rt.Stock }).ToListAsync();
             var rows = new List<RoomAvailability>();
@@ -529,6 +1139,47 @@ END$$;";
             await ResetIdentityAsync("RoomAvailabilities");
         }
 
+        // 6b) Ensure January 2026 availability exists for all room types
+        {
+            var janStart = new DateTime(2026, 1, 1);
+            var janEnd = new DateTime(2026, 1, 31);
+
+            var roomTypesSeed = await ctx.RoomTypes.AsNoTracking()
+                .Select(rt => new { rt.Id, rt.Stock })
+                .ToListAsync();
+
+            var existing = await ctx.RoomAvailabilities
+                .Where(a => a.Date >= janStart && a.Date <= janEnd)
+                .Select(a => new { a.RoomTypeId, a.Date })
+                .ToListAsync();
+
+            var existingSet = new HashSet<(int RoomTypeId, DateTime Date)>(
+                existing.Select(x => (x.RoomTypeId, x.Date)));
+
+            var missing = new List<RoomAvailability>();
+            foreach (var rt in roomTypesSeed)
+            {
+                for (var d = janStart; d <= janEnd; d = d.AddDays(1))
+                {
+                    if (existingSet.Contains((rt.Id, d))) continue;
+
+                    missing.Add(new RoomAvailability
+                    {
+                        RoomTypeId = rt.Id,
+                        Date = d,
+                        Available = Math.Max(1, rt.Stock)
+                    });
+                }
+            }
+
+            if (missing.Count > 0)
+            {
+                await ctx.RoomAvailabilities.AddRangeAsync(missing);
+                await ctx.SaveChangesAsync();
+                await ResetIdentityAsync("RoomAvailabilities");
+            }
+        }
+
         // 7) PROMOTIONS
         if (!await ctx.Promotions.AnyAsync())
         {
@@ -549,8 +1200,8 @@ END$$;";
                     Id = 2,
                     HotelId = 3,
                     Title = "Sea Escape",
-                    Description = "15% off midweek stays.",
-                    DiscountPercent = 15,
+                    Description = "10% off midweek stays.",
+                    DiscountPercent = 10,
                     StartDate = new DateTime(2025, 11, 5),
                     EndDate = new DateTime(2025, 12, 15),
                     IsActive = true
@@ -563,6 +1214,116 @@ END$$;";
                     Description = "20% off December bookings.",
                     DiscountPercent = 20,
                     StartDate = new DateTime(2025, 12, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    IsActive = true
+                },
+                new Promotion
+                {
+                    Id = 4,
+                    HotelId = 5,
+                    Title = "Old Town Weekend",
+                    Description = "10% off weekend stays.",
+                    DiscountPercent = 10,
+                    StartDate = new DateTime(2025, 10, 1),
+                    EndDate = new DateTime(2025, 12, 15),
+                    IsActive = true
+                },
+                new Promotion
+                {
+                    Id = 5,
+                    HotelId = 6,
+                    Title = "River View Deal",
+                    Description = "10% off for riverside rooms.",
+                    DiscountPercent = 10,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    IsActive = true
+                },
+                new Promotion
+                {
+                    Id = 6,
+                    HotelId = 7,
+                    Title = "Wellness Escape",
+                    Description = "20% off spa and wellness packages.",
+                    DiscountPercent = 20,
+                    StartDate = new DateTime(2025, 11, 15),
+                    EndDate = new DateTime(2026, 1, 31),
+                    IsActive = true
+                },
+                new Promotion
+                {
+                    Id = 7,
+                    HotelId = 8,
+                    Title = "Garden Calm",
+                    Description = "10% off midweek stays.",
+                    DiscountPercent = 10,
+                    StartDate = new DateTime(2025, 10, 15),
+                    EndDate = new DateTime(2025, 12, 31),
+                    IsActive = true
+                },
+                new Promotion
+                {
+                    Id = 8,
+                    HotelId = 9,
+                    Title = "Skyline Business",
+                    Description = "10% off business stays in November.",
+                    DiscountPercent = 10,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 11, 30),
+                    IsActive = true
+                },
+                new Promotion
+                {
+                    Id = 9,
+                    HotelId = 10,
+                    Title = "Heritage Nights",
+                    Description = "10% off for heritage stays.",
+                    DiscountPercent = 10,
+                    StartDate = new DateTime(2025, 11, 10),
+                    EndDate = new DateTime(2025, 12, 20),
+                    IsActive = true
+                },
+                new Promotion
+                {
+                    Id = 10,
+                    HotelId = 11,
+                    Title = "Courtyard Stay",
+                    Description = "10% off for longer stays.",
+                    DiscountPercent = 10,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 15),
+                    IsActive = true
+                },
+                new Promotion
+                {
+                    Id = 11,
+                    HotelId = 12,
+                    Title = "Riverside Sunset",
+                    Description = "10% off river view rooms.",
+                    DiscountPercent = 10,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 12, 31),
+                    IsActive = true
+                },
+                new Promotion
+                {
+                    Id = 12,
+                    HotelId = 13,
+                    Title = "Business Saver",
+                    Description = "10% off corporate bookings.",
+                    DiscountPercent = 10,
+                    StartDate = new DateTime(2025, 11, 1),
+                    EndDate = new DateTime(2025, 11, 30),
+                    IsActive = true
+                },
+                new Promotion
+                {
+                    Id = 13,
+                    HotelId = 14,
+                    Title = "Panorama Escape",
+                    Description = "10% off winter stays.",
+                    DiscountPercent = 10,
+                    StartDate = new DateTime(2025, 11, 1),
                     EndDate = new DateTime(2025, 12, 31),
                     IsActive = true
                 }
@@ -590,7 +1351,24 @@ END$$;";
                 new HotelTag { HotelId = 3, TagId = 4 },
                 new HotelTag { HotelId = 3, TagId = 2 },
                 new HotelTag { HotelId = 4, TagId = 5 },
-                new HotelTag { HotelId = 4, TagId = 3 }
+                new HotelTag { HotelId = 4, TagId = 3 },
+                new HotelTag { HotelId = 5, TagId = 1 },
+                new HotelTag { HotelId = 5, TagId = 2 },
+                new HotelTag { HotelId = 6, TagId = 2 },
+                new HotelTag { HotelId = 6, TagId = 4 },
+                new HotelTag { HotelId = 7, TagId = 3 },
+                new HotelTag { HotelId = 7, TagId = 2 },
+                new HotelTag { HotelId = 8, TagId = 2 },
+                new HotelTag { HotelId = 8, TagId = 4 },
+                new HotelTag { HotelId = 9, TagId = 1 },
+                new HotelTag { HotelId = 10, TagId = 2 },
+                new HotelTag { HotelId = 10, TagId = 4 },
+                new HotelTag { HotelId = 11, TagId = 1 },
+                new HotelTag { HotelId = 11, TagId = 2 },
+                new HotelTag { HotelId = 12, TagId = 4 },
+                new HotelTag { HotelId = 13, TagId = 1 },
+                new HotelTag { HotelId = 14, TagId = 2 },
+                new HotelTag { HotelId = 14, TagId = 3 }
             );
             await ctx.SaveChangesAsync();
             await ResetIdentityAsync("Tags");
@@ -683,6 +1461,146 @@ END$$;";
                     HotelId = 4,
                     Url = "https://files.selar.co/product-images/2024/products/tidaconsulting/hotel-financial-model-selar.co-6644d050ec39f.jpeg",
                     SortOrder = 3
+                },
+                new HotelImage
+                {
+                    Id = 13,
+                    HotelId = 5,
+                    Url = "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 1
+                },
+                new HotelImage
+                {
+                    Id = 14,
+                    HotelId = 5,
+                    Url = "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 2
+                },
+                new HotelImage
+                {
+                    Id = 15,
+                    HotelId = 6,
+                    Url = "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 1
+                },
+                new HotelImage
+                {
+                    Id = 16,
+                    HotelId = 6,
+                    Url = "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 2
+                },
+                new HotelImage
+                {
+                    Id = 17,
+                    HotelId = 7,
+                    Url = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 1
+                },
+                new HotelImage
+                {
+                    Id = 18,
+                    HotelId = 7,
+                    Url = "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 2
+                },
+                new HotelImage
+                {
+                    Id = 19,
+                    HotelId = 8,
+                    Url = "https://images.unsplash.com/photo-1505691723518-36a5ac3be353?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 1
+                },
+                new HotelImage
+                {
+                    Id = 20,
+                    HotelId = 8,
+                    Url = "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 2
+                },
+                new HotelImage
+                {
+                    Id = 21,
+                    HotelId = 9,
+                    Url = "https://images.unsplash.com/photo-1501876725168-00c445821c9e?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 1
+                },
+                new HotelImage
+                {
+                    Id = 22,
+                    HotelId = 9,
+                    Url = "https://images.unsplash.com/photo-1501117716987-c8e1ecb2101e?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 2
+                },
+                new HotelImage
+                {
+                    Id = 23,
+                    HotelId = 10,
+                    Url = "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 1
+                },
+                new HotelImage
+                {
+                    Id = 24,
+                    HotelId = 10,
+                    Url = "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 2
+                },
+                new HotelImage
+                {
+                    Id = 25,
+                    HotelId = 11,
+                    Url = "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 1
+                },
+                new HotelImage
+                {
+                    Id = 26,
+                    HotelId = 11,
+                    Url = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 2
+                },
+                new HotelImage
+                {
+                    Id = 27,
+                    HotelId = 12,
+                    Url = "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 1
+                },
+                new HotelImage
+                {
+                    Id = 28,
+                    HotelId = 12,
+                    Url = "https://images.unsplash.com/photo-1505691723518-36a5ac3be353?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 2
+                },
+                new HotelImage
+                {
+                    Id = 29,
+                    HotelId = 13,
+                    Url = "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 1
+                },
+                new HotelImage
+                {
+                    Id = 30,
+                    HotelId = 13,
+                    Url = "https://images.unsplash.com/photo-1501876725168-00c445821c9e?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 2
+                },
+                new HotelImage
+                {
+                    Id = 31,
+                    HotelId = 14,
+                    Url = "https://images.unsplash.com/photo-1501117716987-c8e1ecb2101e?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 1
+                },
+                new HotelImage
+                {
+                    Id = 32,
+                    HotelId = 14,
+                    Url = "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=1200&q=80",
+                    SortOrder = 2
                 }
             );
             await ctx.SaveChangesAsync();
@@ -706,6 +1624,90 @@ END$$;";
                     HotelId = 2,
                     Label = "Reception",
                     PhoneNumber = "+387 36 654 321"
+                },
+                new PhoneContact
+                {
+                    Id = 3,
+                    HotelId = 3,
+                    Label = "Front desk",
+                    PhoneNumber = "+385 21 555 100"
+                },
+                new PhoneContact
+                {
+                    Id = 4,
+                    HotelId = 4,
+                    Label = "Reception",
+                    PhoneNumber = "+387 33 555 200"
+                },
+                new PhoneContact
+                {
+                    Id = 5,
+                    HotelId = 5,
+                    Label = "Front desk",
+                    PhoneNumber = "+387 33 555 300"
+                },
+                new PhoneContact
+                {
+                    Id = 6,
+                    HotelId = 6,
+                    Label = "Reception",
+                    PhoneNumber = "+387 36 555 400"
+                },
+                new PhoneContact
+                {
+                    Id = 7,
+                    HotelId = 7,
+                    Label = "Front desk",
+                    PhoneNumber = "+387 33 555 500"
+                },
+                new PhoneContact
+                {
+                    Id = 8,
+                    HotelId = 8,
+                    Label = "Reception",
+                    PhoneNumber = "+387 36 555 600"
+                },
+                new PhoneContact
+                {
+                    Id = 9,
+                    HotelId = 9,
+                    Label = "Front desk",
+                    PhoneNumber = "+387 33 555 700"
+                },
+                new PhoneContact
+                {
+                    Id = 10,
+                    HotelId = 10,
+                    Label = "Reception",
+                    PhoneNumber = "+387 36 555 800"
+                },
+                new PhoneContact
+                {
+                    Id = 11,
+                    HotelId = 11,
+                    Label = "Front desk",
+                    PhoneNumber = "+387 33 555 900"
+                },
+                new PhoneContact
+                {
+                    Id = 12,
+                    HotelId = 12,
+                    Label = "Reception",
+                    PhoneNumber = "+387 36 555 010"
+                },
+                new PhoneContact
+                {
+                    Id = 13,
+                    HotelId = 13,
+                    Label = "Front desk",
+                    PhoneNumber = "+387 33 555 020"
+                },
+                new PhoneContact
+                {
+                    Id = 14,
+                    HotelId = 14,
+                    Label = "Reception",
+                    PhoneNumber = "+387 36 555 030"
                 }
             );
             await ctx.SaveChangesAsync();
@@ -742,7 +1744,7 @@ END$$;";
                     CheckIn = new DateTime(2025, 11, 10),
                     CheckOut = new DateTime(2025, 11, 12),
                     Guests = 2,
-                    Subtotal = 85m * 2, // 2 nights
+                    Subtotal = 90m * 2, // 2 nights
                     Currency = "EUR",
                     Status = "Confirmed",
                     ConfirmationNumber = "RW-DEMO-0001",
@@ -821,7 +1823,7 @@ END$$;";
                     CheckIn = new DateTime(2024, 9, 12),
                     CheckOut = new DateTime(2024, 9, 15),
                     Guests = 1,
-                    Subtotal = 95m * 3,
+                    Subtotal = 100m * 3,
                     TaxesAndFees = 0m,
                     ServiceFee = 0m,
                     Currency = "EUR",
@@ -866,6 +1868,176 @@ END$$;";
                     CancelledAt = DateTime.UtcNow.AddDays(-5),
                     ConfirmationNumber = "RW-DEMO-0008",
                     CreatedAt = DateTime.UtcNow.AddDays(-15)
+                },
+                new Reservation
+                {
+                    PublicId = Guid.NewGuid(),
+                    UserId = demoUserId,
+                    HotelId = 5,
+                    RoomTypeId = 9,
+                    CheckIn = DateTime.UtcNow.AddDays(-20).Date,
+                    CheckOut = DateTime.UtcNow.AddDays(-18).Date,
+                    Guests = 2,
+                    Subtotal = 100m * 2,
+                    TaxesAndFees = 0m,
+                    ServiceFee = 0m,
+                    Currency = "EUR",
+                    Status = "Completed",
+                    ConfirmationNumber = "RW-DEMO-0009",
+                    CreatedAt = DateTime.UtcNow.AddDays(-21)
+                },
+                new Reservation
+                {
+                    PublicId = Guid.NewGuid(),
+                    UserId = demoUserId,
+                    HotelId = 6,
+                    RoomTypeId = 11,
+                    CheckIn = DateTime.UtcNow.AddDays(-17).Date,
+                    CheckOut = DateTime.UtcNow.AddDays(-15).Date,
+                    Guests = 2,
+                    Subtotal = 80m * 2,
+                    TaxesAndFees = 0m,
+                    ServiceFee = 0m,
+                    Currency = "EUR",
+                    Status = "Completed",
+                    ConfirmationNumber = "RW-DEMO-0010",
+                    CreatedAt = DateTime.UtcNow.AddDays(-18)
+                },
+                new Reservation
+                {
+                    PublicId = Guid.NewGuid(),
+                    UserId = demoUserId,
+                    HotelId = 7,
+                    RoomTypeId = 13,
+                    CheckIn = DateTime.UtcNow.AddDays(-16).Date,
+                    CheckOut = DateTime.UtcNow.AddDays(-14).Date,
+                    Guests = 2,
+                    Subtotal = 110m * 2,
+                    TaxesAndFees = 0m,
+                    ServiceFee = 0m,
+                    Currency = "EUR",
+                    Status = "Completed",
+                    ConfirmationNumber = "RW-DEMO-0011",
+                    CreatedAt = DateTime.UtcNow.AddDays(-16)
+                },
+                new Reservation
+                {
+                    PublicId = Guid.NewGuid(),
+                    UserId = demoUserId,
+                    HotelId = 8,
+                    RoomTypeId = 15,
+                    CheckIn = DateTime.UtcNow.AddDays(-13).Date,
+                    CheckOut = DateTime.UtcNow.AddDays(-11).Date,
+                    Guests = 2,
+                    Subtotal = 90m * 2,
+                    TaxesAndFees = 0m,
+                    ServiceFee = 0m,
+                    Currency = "EUR",
+                    Status = "Completed",
+                    ConfirmationNumber = "RW-DEMO-0012",
+                    CreatedAt = DateTime.UtcNow.AddDays(-13)
+                },
+                new Reservation
+                {
+                    PublicId = Guid.NewGuid(),
+                    UserId = demoUserId,
+                    HotelId = 9,
+                    RoomTypeId = 17,
+                    CheckIn = DateTime.UtcNow.AddDays(-12).Date,
+                    CheckOut = DateTime.UtcNow.AddDays(-10).Date,
+                    Guests = 2,
+                    Subtotal = 110m * 2,
+                    TaxesAndFees = 0m,
+                    ServiceFee = 0m,
+                    Currency = "EUR",
+                    Status = "Completed",
+                    ConfirmationNumber = "RW-DEMO-0013",
+                    CreatedAt = DateTime.UtcNow.AddDays(-12)
+                },
+                new Reservation
+                {
+                    PublicId = Guid.NewGuid(),
+                    UserId = demoUserId,
+                    HotelId = 10,
+                    RoomTypeId = 19,
+                    CheckIn = DateTime.UtcNow.AddDays(-10).Date,
+                    CheckOut = DateTime.UtcNow.AddDays(-8).Date,
+                    Guests = 2,
+                    Subtotal = 100m * 2,
+                    TaxesAndFees = 0m,
+                    ServiceFee = 0m,
+                    Currency = "EUR",
+                    Status = "Completed",
+                    ConfirmationNumber = "RW-DEMO-0014",
+                    CreatedAt = DateTime.UtcNow.AddDays(-10)
+                },
+                new Reservation
+                {
+                    PublicId = Guid.NewGuid(),
+                    UserId = demoUserId,
+                    HotelId = 11,
+                    RoomTypeId = 21,
+                    CheckIn = DateTime.UtcNow.AddDays(-9).Date,
+                    CheckOut = DateTime.UtcNow.AddDays(-7).Date,
+                    Guests = 2,
+                    Subtotal = 90m * 2,
+                    TaxesAndFees = 0m,
+                    ServiceFee = 0m,
+                    Currency = "EUR",
+                    Status = "Completed",
+                    ConfirmationNumber = "RW-DEMO-0015",
+                    CreatedAt = DateTime.UtcNow.AddDays(-9)
+                },
+                new Reservation
+                {
+                    PublicId = Guid.NewGuid(),
+                    UserId = demoUserId,
+                    HotelId = 12,
+                    RoomTypeId = 23,
+                    CheckIn = DateTime.UtcNow.AddDays(-8).Date,
+                    CheckOut = DateTime.UtcNow.AddDays(-6).Date,
+                    Guests = 2,
+                    Subtotal = 100m * 2,
+                    TaxesAndFees = 0m,
+                    ServiceFee = 0m,
+                    Currency = "EUR",
+                    Status = "Completed",
+                    ConfirmationNumber = "RW-DEMO-0016",
+                    CreatedAt = DateTime.UtcNow.AddDays(-8)
+                },
+                new Reservation
+                {
+                    PublicId = Guid.NewGuid(),
+                    UserId = demoUserId,
+                    HotelId = 13,
+                    RoomTypeId = 25,
+                    CheckIn = DateTime.UtcNow.AddDays(-7).Date,
+                    CheckOut = DateTime.UtcNow.AddDays(-5).Date,
+                    Guests = 2,
+                    Subtotal = 120m * 2,
+                    TaxesAndFees = 0m,
+                    ServiceFee = 0m,
+                    Currency = "EUR",
+                    Status = "Completed",
+                    ConfirmationNumber = "RW-DEMO-0017",
+                    CreatedAt = DateTime.UtcNow.AddDays(-7)
+                },
+                new Reservation
+                {
+                    PublicId = Guid.NewGuid(),
+                    UserId = demoUserId,
+                    HotelId = 14,
+                    RoomTypeId = 27,
+                    CheckIn = DateTime.UtcNow.AddDays(-6).Date,
+                    CheckOut = DateTime.UtcNow.AddDays(-4).Date,
+                    Guests = 2,
+                    Subtotal = 100m * 2,
+                    TaxesAndFees = 0m,
+                    ServiceFee = 0m,
+                    Currency = "EUR",
+                    Status = "Completed",
+                    ConfirmationNumber = "RW-DEMO-0018",
+                    CreatedAt = DateTime.UtcNow.AddDays(-6)
                 }
             };
 
@@ -918,6 +2090,106 @@ END$$;";
                         Title = "Great for skiing",
                         Body = "Cozy lodge, easy access to the slopes.",
                         CreatedAt = DateTime.UtcNow.AddDays(-12)
+                    },
+                    new Review
+                    {
+                        HotelId = 5,
+                        ReservationId = byHotel[5],
+                        UserId = demoUserId,
+                        Rating = 5,
+                        Title = "Old town charm",
+                        Body = "Lovely boutique stay near the bazaar.",
+                        CreatedAt = DateTime.UtcNow.AddDays(-20)
+                    },
+                    new Review
+                    {
+                        HotelId = 6,
+                        ReservationId = byHotel[6],
+                        UserId = demoUserId,
+                        Rating = 4,
+                        Title = "Riverside comfort",
+                        Body = "Peaceful rooms and great staff.",
+                        CreatedAt = DateTime.UtcNow.AddDays(-17)
+                    },
+                    new Review
+                    {
+                        HotelId = 7,
+                        ReservationId = byHotel[7],
+                        UserId = demoUserId,
+                        Rating = 5,
+                        Title = "Wellness escape",
+                        Body = "Spa was excellent, beautiful views.",
+                        CreatedAt = DateTime.UtcNow.AddDays(-16)
+                    },
+                    new Review
+                    {
+                        HotelId = 8,
+                        ReservationId = byHotel[8],
+                        UserId = demoUserId,
+                        Rating = 4,
+                        Title = "Quiet and green",
+                        Body = "Loved the garden and calm atmosphere.",
+                        CreatedAt = DateTime.UtcNow.AddDays(-13)
+                    },
+                    new Review
+                    {
+                        HotelId = 9,
+                        ReservationId = byHotel[9],
+                        UserId = demoUserId,
+                        Rating = 4,
+                        Title = "Great city stay",
+                        Body = "Modern rooms and convenient location.",
+                        CreatedAt = DateTime.UtcNow.AddDays(-12)
+                    },
+                    new Review
+                    {
+                        HotelId = 10,
+                        ReservationId = byHotel[10],
+                        UserId = demoUserId,
+                        Rating = 5,
+                        Title = "Heritage gem",
+                        Body = "Charming stone building and friendly hosts.",
+                        CreatedAt = DateTime.UtcNow.AddDays(-10)
+                    },
+                    new Review
+                    {
+                        HotelId = 11,
+                        ReservationId = byHotel[11],
+                        UserId = demoUserId,
+                        Rating = 4,
+                        Title = "Courtyard beauty",
+                        Body = "Very cozy, perfect for a city break.",
+                        CreatedAt = DateTime.UtcNow.AddDays(-9)
+                    },
+                    new Review
+                    {
+                        HotelId = 12,
+                        ReservationId = byHotel[12],
+                        UserId = demoUserId,
+                        Rating = 5,
+                        Title = "Sunset views",
+                        Body = "Amazing terrace and river views.",
+                        CreatedAt = DateTime.UtcNow.AddDays(-8)
+                    },
+                    new Review
+                    {
+                        HotelId = 13,
+                        ReservationId = byHotel[13],
+                        UserId = demoUserId,
+                        Rating = 4,
+                        Title = "Business ready",
+                        Body = "Great Wi-Fi and meeting facilities.",
+                        CreatedAt = DateTime.UtcNow.AddDays(-7)
+                    },
+                    new Review
+                    {
+                        HotelId = 14,
+                        ReservationId = byHotel[14],
+                        UserId = demoUserId,
+                        Rating = 4,
+                        Title = "Panorama views",
+                        Body = "Beautiful hillside lodge with great views.",
+                        CreatedAt = DateTime.UtcNow.AddDays(-6)
                     }
                 );
                 await ctx.SaveChangesAsync();

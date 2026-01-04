@@ -1,6 +1,8 @@
 
 using System.IO;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RoomWise.Api.Options;
 using RoomWise.Model.Requests;
@@ -17,12 +19,20 @@ public sealed class PaymentsController : BaseController<PaymentResponse, Payment
 {
     private readonly IPaymentService _payments;
     private readonly StripeOptions _stripeOptions;
+    private readonly IHostEnvironment _env;
+    private readonly ILogger<PaymentsController> _logger;
 
-    public PaymentsController(IPaymentService payments, IOptions<StripeOptions> stripeOptions)
+    public PaymentsController(
+        IPaymentService payments,
+        IOptions<StripeOptions> stripeOptions,
+        IHostEnvironment env,
+        ILogger<PaymentsController> logger)
         : base(payments)
     {
         _payments = payments;
         _stripeOptions = stripeOptions.Value;
+        _env = env;
+        _logger = logger;
     }
     
     [HttpPost("intent")]
@@ -47,10 +57,27 @@ public sealed class PaymentsController : BaseController<PaymentResponse, Payment
 
         try
         {
-            stripeEvent = EventUtility.ConstructEvent(json, sigHeader, _stripeOptions.WebhookSecret);
+            if (_env.IsDevelopment() && _stripeOptions.DisableWebhookSignature)
+            {
+                _logger.LogWarning("Stripe webhook signature validation disabled (Development).");
+                stripeEvent = EventUtility.ParseEvent(json, throwOnApiVersionMismatch: false);
+            }
+            else if (string.IsNullOrWhiteSpace(_stripeOptions.WebhookSecret))
+            {
+                return BadRequest();
+            }
+            else
+            {
+                stripeEvent = EventUtility.ConstructEvent(
+                    json,
+                    sigHeader,
+                    _stripeOptions.WebhookSecret,
+                    throwOnApiVersionMismatch: false);
+            }
         }
-        catch (StripeException)
+        catch (StripeException ex)
         {
+            _logger.LogWarning(ex, "Stripe webhook signature validation failed.");
             return BadRequest(); 
         }
 

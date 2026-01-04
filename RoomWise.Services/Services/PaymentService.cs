@@ -58,12 +58,11 @@ public class PaymentService
 
         var currency = (request.Currency ?? reservation.Currency ?? "EUR").ToLowerInvariant();
 
+        var redeemPoints = Math.Max(0, request.LoyaltyPointsToRedeem ?? 0);
         var baseAmount = request.Amount > 0 ? request.Amount : reservation.Total;
-        if (baseAmount <= 0)
+        if (baseAmount <= 0 && redeemPoints <= 0)
             throw new InvalidOperationException("Payment amount must be greater than zero.");
 
-
-        var redeemPoints = 0;
         var amount = baseAmount;
 
         reservation.Total = amount;

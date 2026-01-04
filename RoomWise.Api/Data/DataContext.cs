@@ -42,6 +42,7 @@ public class DataContext : IdentityDbContext<AppUser>
     public DbSet<LoyaltyPoint> LoyaltyPoints { get; set; }
     public DbSet<HotelAdmin> HotelAdmins { get; set; }
     public DbSet<EmailVerification> EmailVerifications { get; set; }
+    public DbSet<PendingRegistration> PendingRegistrations { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -345,6 +346,10 @@ public class DataContext : IdentityDbContext<AppUser>
 
         builder.Entity<EmailVerification>()
             .HasIndex(ev => new { ev.UserId, ev.Email });
+
+        builder.Entity<PendingRegistration>()
+            .HasIndex(pr => pr.Email)
+            .IsUnique();
 
         // ---------------------------
         // Promotions

@@ -47,6 +47,23 @@ public sealed class RoomTypesController :
         return Filtered(async () => await base.Update(id, req));
     }
 
+    [Authorize(Roles = AppRoles.Administrator)]
+    [HttpGet("availability")]
+    public async Task<ActionResult<IReadOnlyList<RoomTypeAvailabilityResponse>>> Availability(
+        [FromQuery] DateTime? date,
+        CancellationToken ct = default)
+    {
+        if (_service is not IRoomTypeService svc)
+            return BadRequest();
+
+        var hotelId = await _scope.GetHotelIdAsync(ct);
+        if (hotelId.HasValue)
+            svc.ForceHotelScope(hotelId.Value);
+
+        var result = await svc.GetAvailabilityAsync(date?.Date ?? DateTime.UtcNow.Date, ct);
+        return Ok(result);
+    }
+
     private async Task<T> Filtered<T>(Func<Task<T>> action)
     {
         var hotelId = await _scope.GetHotelIdAsync();

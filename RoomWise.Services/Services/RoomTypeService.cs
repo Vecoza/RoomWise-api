@@ -66,4 +66,67 @@ public sealed class RoomTypeService
 
         return Task.CompletedTask;
     }
+
+    public async Task<IReadOnlyList<RoomTypeAvailabilityResponse>> GetAvailabilityAsync(DateTime date, CancellationToken ct)
+    {
+        var dayStart = date.Date;
+        var dayEnd = dayStart.AddDays(1);
+
+        var roomTypes = _context.Set<RoomType>()
+            .AsNoTracking();
+
+        if (_forcedHotelId.HasValue)
+            roomTypes = roomTypes.Where(rt => rt.HotelId == _forcedHotelId.Value);
+
+        var types = await roomTypes
+            .Select(rt => new
+            {
+                rt.Id,
+                rt.Name,
+                rt.Stock,
+                rt.Currency,
+                rt.HotelId
+            })
+            .ToListAsync(ct);
+
+        if (types.Count == 0)
+            return Array.Empty<RoomTypeAvailabilityResponse>();
+
+        var roomTypeIds = types.Select(t => t.Id).ToList();
+        var activeStatuses = new[] { "Pending", "Confirmed" };
+
+        var reservations = _context.Set<Reservation>()
+            .AsNoTracking()
+            .Where(r => roomTypeIds.Contains(r.RoomTypeId))
+            .Where(r => r.CheckIn < dayEnd && r.CheckOut > dayStart)
+            .Where(r => activeStatuses.Contains(r.Status));
+
+        if (_forcedHotelId.HasValue)
+            reservations = reservations.Where(r => r.HotelId == _forcedHotelId.Value);
+
+        var reservedByRoomType = await reservations
+            .GroupBy(r => r.RoomTypeId)
+            .Select(g => new { RoomTypeId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.RoomTypeId, x => x.Count, ct);
+
+        var result = new List<RoomTypeAvailabilityResponse>();
+        foreach (var t in types.OrderBy(t => t.Name))
+        {
+            reservedByRoomType.TryGetValue(t.Id, out var reserved);
+            var available = Math.Max(0, t.Stock - reserved);
+
+            result.Add(new RoomTypeAvailabilityResponse
+            {
+                RoomTypeId = t.Id,
+                RoomTypeName = t.Name,
+                Stock = t.Stock,
+                Reserved = reserved,
+                Available = available,
+                Currency = t.Currency,
+                Date = dayStart
+            });
+        }
+
+        return result;
+    }
 }

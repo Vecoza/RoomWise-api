@@ -14,4 +14,8 @@ public class NotificationCreateRequest
 
     [Required]
     public string Message { get; set; } = "";
+
+    public string? EmailBody { get; set; }
+
+    public bool? EmailIsHtml { get; set; }
 }

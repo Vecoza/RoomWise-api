@@ -35,7 +35,7 @@ public class NotificationService : INotificationService
         _db.Set<Notification>().Add(entity);
         await _db.SaveChangesAsync(ct);
 
-        await TryEnqueueEmailAsync(entity, ct);
+        await TryEnqueueEmailAsync(entity, request.EmailBody, request.EmailIsHtml, ct);
 
         return ToResponse(entity);
     }
@@ -84,7 +84,11 @@ public class NotificationService : INotificationService
         }
     }
 
-    private async Task TryEnqueueEmailAsync(Notification notification, CancellationToken ct)
+    private async Task TryEnqueueEmailAsync(
+        Notification notification,
+        string? emailBody,
+        bool? emailIsHtml,
+        CancellationToken ct)
     {
         try
         {
@@ -100,6 +104,7 @@ public class NotificationService : INotificationService
                 "reservation_created" => "Your reservation was created",
                 "payment_succeeded" => "Payment confirmed",
                 "reservation_reminder" => "Reservation reminder",
+                "reservation_cancelled" => "Reservation cancelled",
                 _ => "RoomWise notification"
             };
 
@@ -107,7 +112,8 @@ public class NotificationService : INotificationService
             {
                 To = email,
                 Subject = subject,
-                Body = notification.Message,
+                Body = emailBody ?? notification.Message,
+                IsHtml = emailIsHtml ?? false,
                 ReservationId = notification.ReservationId,
                 UserId = notification.UserId
             }, ct);

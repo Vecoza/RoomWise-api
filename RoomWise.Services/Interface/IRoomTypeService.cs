@@ -9,4 +9,5 @@ public interface IRoomTypeService : ICRUDService<RoomTypeResponse, RoomTypeSearc
 
 {
     void ForceHotelScope(int hotelId);
+    Task<IReadOnlyList<RoomTypeAvailabilityResponse>> GetAvailabilityAsync(DateTime date, CancellationToken ct);
 }

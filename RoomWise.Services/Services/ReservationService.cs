@@ -3,6 +3,8 @@
 using System.Security.Claims;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
+using System.Text;
 using RoomWise.Model;
 using RoomWise.Model.Requests;
 using RoomWise.Model.Responses;
@@ -330,12 +332,58 @@ public sealed class ReservationService
         {
             if (!string.IsNullOrWhiteSpace(reservation.UserId))
             {
+                var reservationDetails = await _context.Set<Reservation>()
+                    .Include(r => r.Hotel).ThenInclude(h => h.City)
+                    .Include(r => r.RoomType)
+                    .FirstOrDefaultAsync(r => r.Id == reservation.Id, ct);
+
+                var details = reservationDetails ?? reservation;
+
+                var firstName = await _context.Set<UserProfile>()
+                    .Where(p => p.UserId == details.UserId)
+                    .Select(p => p.FirstName)
+                    .FirstOrDefaultAsync(ct);
+
+                var greetingName = string.IsNullOrWhiteSpace(firstName) ? "there" : firstName.Trim();
+                var message = $"Your reservation {details.ConfirmationNumber} has been cancelled.";
+
+                var emailBody = new StringBuilder()
+                    .AppendLine("<!DOCTYPE html>")
+                    .AppendLine("<html><body style=\"font-family:Arial,Helvetica,sans-serif;color:#1f2937;\">")
+                    .AppendLine("<div style=\"max-width:640px;margin:0 auto;padding:24px;\">")
+                    .AppendLine("<h2 style=\"margin:0 0 8px;color:#b91c1c;\">Reservation Cancelled</h2>")
+                    .AppendLine("<p style=\"margin:0 0 16px;\">Hi " + Html(greetingName) + ",</p>")
+                    .AppendLine("<p style=\"margin:0 0 16px;\">Your reservation has been cancelled. Here are the details:</p>")
+                    .AppendLine("<div style=\"padding:12px 16px;border:1px solid #fee2e2;background:#fef2f2;border-radius:8px;margin-bottom:16px;\">")
+                    .AppendLine("<strong>Confirmation:</strong> " + Html(details.ConfirmationNumber) + "<br/>")
+                    .AppendLine("<strong>Status:</strong> Cancelled<br/>")
+                    .AppendLine("<strong>Cancelled at:</strong> " + reservation.CancelledAt?.ToString("yyyy-MM-dd HH:mm") + " UTC</div>")
+                    .AppendLine("<h3 style=\"margin:16px 0 8px;\">Hotel</h3>")
+                    .AppendLine("<table style=\"width:100%;border-collapse:collapse;\">")
+                    .AppendLine("<tr><td style=\"padding:4px 0;width:120px;\">Name</td><td style=\"padding:4px 0;\">" + Html(details.Hotel?.Name) + "</td></tr>")
+                    .AppendLine("<tr><td style=\"padding:4px 0;\">Address</td><td style=\"padding:4px 0;\">" + Html(details.Hotel?.AddressLine) + ", " + Html(details.Hotel?.City?.Name) + "</td></tr>")
+                    .AppendLine("</table>")
+                    .AppendLine("<h3 style=\"margin:16px 0 8px;\">Stay</h3>")
+                    .AppendLine("<table style=\"width:100%;border-collapse:collapse;\">")
+                    .AppendLine("<tr><td style=\"padding:4px 0;width:120px;\">Room type</td><td style=\"padding:4px 0;\">" + Html(details.RoomType?.Name) + "</td></tr>")
+                    .AppendLine("<tr><td style=\"padding:4px 0;\">Check-in</td><td style=\"padding:4px 0;\">" + details.CheckIn.ToString("yyyy-MM-dd") + "</td></tr>")
+                    .AppendLine("<tr><td style=\"padding:4px 0;\">Check-out</td><td style=\"padding:4px 0;\">" + details.CheckOut.ToString("yyyy-MM-dd") + "</td></tr>")
+                    .AppendLine("<tr><td style=\"padding:4px 0;\">Guests</td><td style=\"padding:4px 0;\">" + details.Guests + "</td></tr>")
+                    .AppendLine("</table>")
+                    .AppendLine("<p style=\"margin:16px 0 0;\">If this was a mistake, feel free to book again anytime.</p>")
+                    .AppendLine("<p style=\"margin:16px 0 0;\">Need help? Reply to this email and we will assist you.</p>")
+                    .AppendLine("<p style=\"margin:24px 0 0;\">RoomWise Team</p>")
+                    .AppendLine("</div></body></html>")
+                    .ToString();
+
                 await _notifications.CreateAsync(new NotificationCreateRequest
                 {
                     UserId = reservation.UserId,
                     ReservationId = reservation.Id,
                     Type = "reservation_cancelled",
-                    Message = $"Your reservation {reservation.ConfirmationNumber} has been cancelled."
+                    Message = message,
+                    EmailBody = emailBody,
+                    EmailIsHtml = true
                 });
             }
         }
@@ -391,6 +439,44 @@ public sealed class ReservationService
             Items = items.Select(MapToResponse).ToList(),
             TotalCount = total
         };
+    }
+
+    public async Task<IReadOnlyList<ReservationArrivalResponse>> GetArrivalsAsync(DateTime date, CancellationToken ct)
+    {
+        var target = date.Date;
+
+        var reservations = _context.Set<Reservation>()
+            .AsNoTracking()
+            .Where(r => r.CheckIn == target);
+
+        if (_forcedHotelId.HasValue)
+            reservations = reservations.Where(r => r.HotelId == _forcedHotelId.Value);
+
+        var activeStatuses = new[] { "Pending", "Confirmed" };
+        reservations = reservations.Where(r => activeStatuses.Contains(r.Status));
+
+        var query =
+            from r in reservations
+            join rt in _context.Set<RoomType>().AsNoTracking() on r.RoomTypeId equals rt.Id
+            join p in _context.Set<UserProfile>().AsNoTracking() on r.UserId equals p.UserId into profiles
+            from p in profiles.DefaultIfEmpty()
+            select new ReservationArrivalResponse
+            {
+                ReservationId = r.Id,
+                GuestFirstName = p != null ? p.FirstName : string.Empty,
+                GuestLastName = p != null ? p.LastName : string.Empty,
+                RoomTypeId = r.RoomTypeId,
+                RoomTypeName = rt.Name,
+                Guests = r.Guests,
+                RoomTotal = r.Total,
+                Currency = r.Currency,
+                CheckIn = r.CheckIn
+            };
+
+        return await query
+            .OrderBy(x => x.RoomTypeName)
+            .ThenBy(x => x.GuestLastName)
+            .ToListAsync(ct);
     }
 
 
@@ -477,12 +563,73 @@ public sealed class ReservationService
         {
             if (!string.IsNullOrWhiteSpace(entity.UserId))
             {
+                var reservation = await _context.Set<Reservation>()
+                    .Include(r => r.Hotel).ThenInclude(h => h.City)
+                    .Include(r => r.RoomType)
+                    .Include(r => r.AddOns).ThenInclude(ra => ra.AddOn)
+                    .FirstOrDefaultAsync(r => r.Id == entity.Id);
+
+                if (reservation is null) return;
+
+                var firstName = await _context.Set<UserProfile>()
+                    .Where(p => p.UserId == reservation.UserId)
+                    .Select(p => p.FirstName)
+                    .FirstOrDefaultAsync();
+
+                var greetingName = string.IsNullOrWhiteSpace(firstName) ? "there" : firstName.Trim();
+                var addOns = reservation.AddOns?.ToList() ?? new List<ReservationAddOn>();
+                var addOnLines = addOns.Count == 0
+                    ? "<li>None</li>"
+                    : string.Join("", addOns.Select(a =>
+                        $"<li>{Html(a.AddOn?.Name ?? "Add-on")} x{a.Quantity}: {a.LineTotal:0.00} {Html(reservation.Currency)}</li>"));
+
+                var message = $"Your reservation {reservation.ConfirmationNumber} has been created.";
+
+                var emailBody = new StringBuilder()
+                    .AppendLine("<!DOCTYPE html>")
+                    .AppendLine("<html><body style=\"font-family:Arial,Helvetica,sans-serif;color:#1f2937;\">")
+                    .AppendLine("<div style=\"max-width:640px;margin:0 auto;padding:24px;\">")
+                    .AppendLine("<h2 style=\"margin:0 0 8px;\">RoomWise Booking Confirmation</h2>")
+                    .AppendLine("<p style=\"margin:0 0 16px;\">Hi " + Html(greetingName) + ",</p>")
+                    .AppendLine("<p style=\"margin:0 0 16px;\">Thanks for your reservation! Here is your booking summary:</p>")
+                    .AppendLine("<div style=\"padding:12px 16px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:16px;\">")
+                    .AppendLine("<strong>Confirmation:</strong> " + Html(reservation.ConfirmationNumber) + "<br/>")
+                    .AppendLine("<strong>Status:</strong> " + Html(reservation.Status) + "</div>")
+                    .AppendLine("<h3 style=\"margin:16px 0 8px;\">Hotel</h3>")
+                    .AppendLine("<table style=\"width:100%;border-collapse:collapse;\">")
+                    .AppendLine("<tr><td style=\"padding:4px 0;width:120px;\">Name</td><td style=\"padding:4px 0;\">" + Html(reservation.Hotel?.Name) + "</td></tr>")
+                    .AppendLine("<tr><td style=\"padding:4px 0;\">Address</td><td style=\"padding:4px 0;\">" + Html(reservation.Hotel?.AddressLine) + ", " + Html(reservation.Hotel?.City?.Name) + "</td></tr>")
+                    .AppendLine("</table>")
+                    .AppendLine("<h3 style=\"margin:16px 0 8px;\">Stay</h3>")
+                    .AppendLine("<table style=\"width:100%;border-collapse:collapse;\">")
+                    .AppendLine("<tr><td style=\"padding:4px 0;width:120px;\">Room type</td><td style=\"padding:4px 0;\">" + Html(reservation.RoomType?.Name) + "</td></tr>")
+                    .AppendLine("<tr><td style=\"padding:4px 0;\">Check-in</td><td style=\"padding:4px 0;\">" + reservation.CheckIn.ToString("yyyy-MM-dd") + "</td></tr>")
+                    .AppendLine("<tr><td style=\"padding:4px 0;\">Check-out</td><td style=\"padding:4px 0;\">" + reservation.CheckOut.ToString("yyyy-MM-dd") + "</td></tr>")
+                    .AppendLine("<tr><td style=\"padding:4px 0;\">Guests</td><td style=\"padding:4px 0;\">" + reservation.Guests + "</td></tr>")
+                    .AppendLine("</table>")
+                    .AppendLine("<h3 style=\"margin:16px 0 8px;\">Add-ons</h3>")
+                    .AppendLine("<ul style=\"margin:0 0 16px;padding-left:18px;\">" + addOnLines + "</ul>")
+                    .AppendLine("<h3 style=\"margin:16px 0 8px;\">Charges</h3>")
+                    .AppendLine("<table style=\"width:100%;border-collapse:collapse;\">")
+                    .AppendLine("<tr><td style=\"padding:4px 0;width:120px;\">Subtotal</td><td style=\"padding:4px 0;\">" + reservation.Subtotal.ToString("0.00") + " " + Html(reservation.Currency) + "</td></tr>")
+                    .AppendLine("<tr><td style=\"padding:4px 0;\">Taxes &amp; fees</td><td style=\"padding:4px 0;\">" + reservation.TaxesAndFees.ToString("0.00") + " " + Html(reservation.Currency) + "</td></tr>")
+                    .AppendLine("<tr><td style=\"padding:4px 0;\">Service fee</td><td style=\"padding:4px 0;\">" + reservation.ServiceFee.ToString("0.00") + " " + Html(reservation.Currency) + "</td></tr>")
+                    .AppendLine("<tr><td style=\"padding:6px 0;font-weight:bold;\">Total</td><td style=\"padding:6px 0;font-weight:bold;\">" + reservation.Total.ToString("0.00") + " " + Html(reservation.Currency) + "</td></tr>")
+                    .AppendLine("</table>")
+                    .AppendLine("<p style=\"margin:16px 0 0;color:#374151;\">Loyalty points are added only after your stay is completed.</p>")
+                    .AppendLine("<p style=\"margin:16px 0 0;\">Need help? Reply to this email and we will assist you.</p>")
+                    .AppendLine("<p style=\"margin:24px 0 0;\">RoomWise Team</p>")
+                    .AppendLine("</div></body></html>")
+                    .ToString();
+
                 await _notifications.CreateAsync(new NotificationCreateRequest
                 {
                     UserId = entity.UserId,
                     ReservationId = entity.Id,
                     Type = "reservation_created",
-                    Message = $"Your reservation {entity.ConfirmationNumber} has been created."
+                    Message = message,
+                    EmailBody = emailBody,
+                    EmailIsHtml = true
                 });
             }
         }
@@ -490,6 +637,8 @@ public sealed class ReservationService
         {
         }
     }
+
+    private static string Html(string? value) => WebUtility.HtmlEncode(value ?? string.Empty);
 
     public override async Task<ReservationResponse?> GetByIdAsync(int id) => await base.GetByIdAsync(id);
 

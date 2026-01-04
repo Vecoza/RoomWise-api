@@ -88,6 +88,43 @@ public sealed class MLRecommendationService : IRecommendationService
 
         if (interactedIds.Count == 0)
         {
+            var cutoff = DateTime.UtcNow.AddDays(-30);
+
+            var bookingCounts = await _db.Set<Reservation>()
+                .AsNoTracking()
+                .Where(r => r.CreatedAt >= cutoff)
+                .GroupBy(r => r.HotelId)
+                .Select(g => new { HotelId = g.Key, Count = g.Count() })
+                .ToListAsync(ct);
+
+            var ratingAverages = await _db.Set<Review>()
+                .AsNoTracking()
+                .Where(rv => rv.CreatedAt >= cutoff)
+                .GroupBy(rv => rv.HotelId)
+                .Select(g => new { HotelId = g.Key, Avg = g.Average(x => (double)x.Rating) })
+                .ToListAsync(ct);
+
+            if (bookingCounts.Count > 0 || ratingAverages.Count > 0)
+            {
+                var bookingMap = bookingCounts.ToDictionary(x => x.HotelId, x => x.Count);
+                var ratingMap = ratingAverages.ToDictionary(x => x.HotelId, x => x.Avg);
+
+                return hotels
+                    .Select(h =>
+                    {
+                        var cheapest = h.RoomTypes.OrderBy(rt => rt.BasePrice).FirstOrDefault()?.BasePrice ?? decimal.MaxValue;
+                        bookingMap.TryGetValue(h.Id, out var bookings);
+                        ratingMap.TryGetValue(h.Id, out var avgRating);
+                        return new { hotel = h, bookings, avgRating, cheapest };
+                    })
+                    .OrderByDescending(x => x.bookings)
+                    .ThenByDescending(x => x.avgRating)
+                    .ThenBy(x => x.cheapest)
+                    .Take(top)
+                    .Select(x => x.hotel)
+                    .Select(ToResponse)
+                    .ToList();
+            }
 
             return hotels
                 .OrderByDescending(h => h.Rating)
