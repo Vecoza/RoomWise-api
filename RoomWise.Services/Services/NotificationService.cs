@@ -104,6 +104,8 @@ public class NotificationService : INotificationService
                 "reservation_created" => "Your reservation was created",
                 "payment_succeeded" => "Payment confirmed",
                 "reservation_reminder" => "Reservation reminder",
+                "checkin_reminder" => "Check-in reminder",
+                "checkout_reminder" => "Check-out reminder",
                 "reservation_cancelled" => "Reservation cancelled",
                 _ => "RoomWise notification"
             };
