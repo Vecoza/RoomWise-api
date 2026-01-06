@@ -41,8 +41,6 @@ Required:
 - `Jwt:Audience=RoomWiseMobile`
 - `STRIPE__SECRETKEY=sk_test_xxx`
 - `STRIPE__WEBHOOKSECRET=whsec_xxx`
-- `AdminUser:Email=admin@example.com`
-- `AdminUser:Password=ChangeMe123!`
 
 ## Demo credentials
 

@@ -27,12 +27,27 @@ public sealed class EmailDeliveryWorker : BackgroundService
         _logger = logger;
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        return Task.Run(() => RunConsumer(stoppingToken), stoppingToken);
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                await RunConsumerAsync(stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "RabbitMQ consumer crashed. Retrying in 5 seconds.");
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+            }
+        }
     }
 
-    private void RunConsumer(CancellationToken ct)
+    private async Task RunConsumerAsync(CancellationToken ct)
     {
         var factory = new ConnectionFactory
         {
@@ -40,7 +55,9 @@ public sealed class EmailDeliveryWorker : BackgroundService
             Port = _rabbit.Port,
             UserName = _rabbit.UserName,
             Password = _rabbit.Password,
-            DispatchConsumersAsync = true
+            DispatchConsumersAsync = true,
+            AutomaticRecoveryEnabled = true,
+            NetworkRecoveryInterval = TimeSpan.FromSeconds(5)
         };
 
         using var connection = factory.CreateConnection();
@@ -83,9 +100,7 @@ public sealed class EmailDeliveryWorker : BackgroundService
 
 
         while (!ct.IsCancellationRequested)
-        {
-            Thread.Sleep(1000);
-        }
+            await Task.Delay(1000, ct);
     }
 
     private async Task SendEmailAsync(EmailMessage msg, CancellationToken ct)

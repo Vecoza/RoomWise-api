@@ -240,7 +240,7 @@ public class DataContext : IdentityDbContext<AppUser>
 
         builder.Entity<Reservation>()
             .HasOne(r => r.RoomType)
-            .WithMany()
+            .WithMany(rt => rt.Reservations)
             .HasForeignKey(r => r.RoomTypeId)
             .OnDelete(DeleteBehavior.Restrict);
 
