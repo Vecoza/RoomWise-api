@@ -10,6 +10,9 @@
 # Local environment variables
 .env
 
+# ASP.NET Core settings
+appsettings.Development.json
+
 # Docker
 Dockerfile
 docker-compose.yml
@@ -70,4 +73,3 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
-
