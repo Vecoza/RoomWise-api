@@ -1,6 +1,12 @@
-# RoomWise API
+# RoomWise
 
-Booking API with reservations, payments (Stripe), availability, promotions, wishlist, loyalty, recommendations, and admin stats.
+Planning and booking hotel accommodation have become key aspects of modern travel. However, users are often faced with overwhelming amounts of information, impractical user interfaces and wasting time while browsing through the available options. At a time when simplicity, speed and personalization are the basic expectations of users, most existing applications still do not solve these challenges in an efficient way.
+
+Guided by the principles of design thinking, the goal of this application is to develop an innovative platform that allows users not only to book accommodation, but also to quickly filter, compare and personalize offers, as well as easy access to all important information. All in one modern and responsive interface. While it will enable administrators to have all the necessary data in one place from which they can manage.
+
+The motivation behind this idea came from a direct analysis of user behavior and problems identified in popular applications such as Booking, Airbnb and Trivago. Based on this analysis and research process of user needs, the goal was set: to create a solution that saves time, reduces the number of steps to the reservation, and offers a rich experience, but without complications.
+
+The application also includes a recommendation system, wishlist functionality, user profiles, which further increases user engagement and satisfaction. To manage all aspects of the platform, a desktop administrative panel is provided, which allows hotel staff and management to monitor revenue, manage reservations, guests, promotions and statistics in real time.
 
 ## Prerequisites
 
@@ -10,12 +16,15 @@ Booking API with reservations, payments (Stripe), availability, promotions, wish
 
 ## Quick start (Docker)
 
-1. Create/verify `RoomWise.Api/.env` (see required variables below).
-2. From the repo root, start the stack:
+1. From the repo root, start the stack:
+
    ```sh
-   docker compose up -d --build
+    docker compose up -d --build rabbitmq db
+    docker compose up -d --build --force-recreate
+
    ```
-3. Open the API docs (Scalar): http://localhost:5184/scalar
+
+2. Open the API docs (Scalar): http://localhost:5184/scalar
 
 ### Services + URLs
 
