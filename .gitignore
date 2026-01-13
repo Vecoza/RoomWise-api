@@ -8,14 +8,12 @@
 ## Get latest from https://github.com/github/gitignore/blob/main/Dotnet.gitignore
 
 # Local environment variables
-.env
+
 
 # ASP.NET Core settings
-appsettings.Development.json
+
 
 # Docker
-Dockerfile
-docker-compose.yml
 docker-compose.override.yml
 *.dockerfile
 
