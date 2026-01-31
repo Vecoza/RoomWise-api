@@ -4,7 +4,7 @@ services:
     container_name: roomwise-db
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Vedran55
+      POSTGRES_PASSWORD: Vedran123
       POSTGRES_DB: RoomWise
     ports:
       - "5433:5432"
@@ -35,7 +35,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:5184
-      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=RoomWise;Username=postgres;Password=Vedran55
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=RoomWise;Username=postgres;Password=Vedran123
       RabbitMq__HostName: rabbitmq
       RabbitMq__Port: 5672
       RabbitMq__UserName: guest
